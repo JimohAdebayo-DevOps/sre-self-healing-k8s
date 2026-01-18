@@ -1,0 +1,20 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: raid-exporter-monitor
+  namespace: monitoring # Keep it with the stack
+  labels:
+    # This label is CRITICAL. The monitoring-stack is configured
+    # to look for ServiceMonitors with this specific label.
+    release: monitoring-stack 
+spec:
+  selector:
+    matchLabels:
+      app: raid-exporter # Must match the label on your RAID Exporter Service
+  namespaceSelector:
+    matchNames:
+      - monitoring # The namespace where your Python app is running
+  endpoints:
+  - port: web # Or the name of the port in your Service definition
+    interval: 15s
+    path: /metrics

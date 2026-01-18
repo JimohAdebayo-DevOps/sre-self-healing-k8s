@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: raid-exporter
+  namespace: monitoring
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: raid-exporter
+  template:
+    metadata:
+      labels:
+        app: raid-exporter
+    spec:
+      containers:
+      - name: exporter
+        image: jimoh1990/raid-exporter:v1 # We will build this next
+        ports:
+        - containerPort: 8000
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: raid-exporter-service
+  namespace: monitoring
+  labels:
+    app: raid-exporter
+spec:
+  selector:
+    app: raid-exporter
+  ports:
+    - name: web
+      protocol: TCP
+      port: 80
+      targetPort: 8000
