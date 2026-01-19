@@ -1,0 +1,20 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: raid-exporter-app
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: 'https://github.com/JimohAdebayo-DevOps/sre-self-healing-k8s.git'
+    targetRevision: HEAD
+    path: k8s # Points Argo CD to the folder where your deployment.yaml is
+  destination:
+    server: 'https://kubernetes.default.svc'
+    namespace: monitoring # We deploy into the 'monitoring' room
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

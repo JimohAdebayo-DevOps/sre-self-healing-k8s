@@ -1,0 +1,65 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: n8n-nightly-backup
+  namespace: n8n
+spec:
+  schedule: "0 3 * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          # This ensures the backup job runs on worker-01 where the RAID is
+          # AND where n8n should be to access the RWO volume
+          nodeSelector:
+            kubernetes.io/hostname: k8s-worker-01 
+          containers:
+          - name: backup-worker
+            image: postgres:15-alpine
+            env:
+            - name: PGPASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-credentials
+                  key: postgres-password
+            command:
+            - /bin/sh
+            - -c
+            - |
+              DATE=$(date +%Y-%m-%d_%H-%M)
+              DB_FILE="/backup/n8n_db_$DATE.sql.gz"
+              FS_FILE="/backup/n8n_files_$DATE.tar.gz"
+
+              echo "--- Starting Full Production Backup ---"
+              
+              # 1. Database Backup
+              echo "Dumping Database..."
+              pg_dump -h n8n-postgres -U postgres n8n_db | gzip > $DB_FILE
+
+              # 2. Binary & Config Backup
+              echo "Archiving n8n Files (Binaries/Configs)..."
+              # 'c'reate 'z'ip 'f'ile
+              tar -czf $FS_FILE -C /n8n-data .
+
+              if [ $? -eq 0 ]; then
+                echo "SUCCESS: Database and Files backed up."
+                echo "Cleaning up archives older than 7 days..."
+                find /backup -type f -name "*.gz" -mtime +7 -delete
+              else
+                echo "FAILURE: Backup encountered an error."
+                exit 1
+              fi
+            volumeMounts:
+            - name: raid5-storage
+              mountPath: /backup
+            - name: n8n-longhorn-data
+              mountPath: /n8n-data
+              readOnly: true # Safety first: Backup should never change original files
+          restartPolicy: OnFailure
+          volumes:
+          - name: raid5-storage
+            persistentVolumeClaim:
+              claimName: n8n-db-backup-pvc
+          - name: n8n-longhorn-data
+            persistentVolumeClaim:
+              claimName: n8n-data
