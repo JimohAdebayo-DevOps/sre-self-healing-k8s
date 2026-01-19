@@ -21,7 +21,7 @@ spec:
         command: ["sh", "-c", "chown 1000:1000 /home/node/.n8n && chown -R 1000:1000 /home/node/.n8n"]
         securityContext:
           runAsUser: 0
-          privileged: true
+          privileged: false
         volumeMounts:
         - name: n8n-data
           mountPath: /home/node/.n8n
