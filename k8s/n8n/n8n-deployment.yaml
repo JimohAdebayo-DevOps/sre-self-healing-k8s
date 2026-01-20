@@ -18,6 +18,13 @@ spec:
       initContainers:
       - name: volume-permissions
         image: busybox:latest
+        resources:
+          limits:
+            cpu: "100m"
+            memory: "64Mi"  # Very small, just for chown
+          requests:
+            cpu: "50m"
+            memory: "32Mi"
         command: ["sh", "-c", "chown 1000:1000 /home/node/.n8n && chown -R 1000:1000 /home/node/.n8n"]
         securityContext:
           runAsUser: 0
@@ -28,6 +35,13 @@ spec:
       containers:
         - name: n8n
           image: n8nio/n8n:latest
+          resources:
+          limits:
+            cpu: "500m"
+            memory: "1Gi"   # Your production limit
+          requests:
+            cpu: "250m"
+            memory: "512Mi" # Guaranteed amount
           securityContext:
             runAsUser: 1000
           ports:
