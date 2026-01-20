@@ -1,0 +1,22 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: longhorn-system
+  namespace: argocd
+spec:
+  project: default
+  source:
+    chart: longhorn
+    repoURL: https://charts.longhorn.io
+    targetRevision: 1.10.1  # Use your current version
+    helm:
+      values: |
+        persistence:
+          defaultClass: true
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: longhorn-system # Must match where you installed it
+  syncPolicy:
+    automated:
+      prune: false # Set to false initially so it doesn't delete existing volumes
+      selfHeal: true
