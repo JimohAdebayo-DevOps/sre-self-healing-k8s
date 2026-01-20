@@ -1,0 +1,29 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: metallb-system
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  project: default
+  sources:
+    # SOURCE 1: The official MetalLB Installation Manifest
+    - repoURL: 'https://github.com/metallb/metallb.git'
+      path: config/manifests
+      targetRevision: v0.14.5 
+    
+    # SOURCE 2: Your Local IP Pool Configuration
+    - repoURL: 'https://github.com/JimohAdebayo-DevOps/sre-self-healing-k8s.git'
+      targetRevision: main
+      path: k8s/metallb # Points to config.yaml
+  destination:
+    server: 'https://kubernetes.default.svc'
+    namespace: metallb-system
+  syncPolicy:
+    automated:
+      prune: false # Safety: don't delete existing networking
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=false
+      - Validate=false # Manifests can sometimes have version-specific validation issues

@@ -1,0 +1,27 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: cert-manager
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"  # Ensure it starts after storage but before apps
+spec:
+  project: default
+  source:
+    chart: cert-manager
+    repoURL: https://charts.jetstack.io
+    targetRevision: 1.14.0  # !!! SRE ACTION: Change this to match your CURRENT version
+    helm:
+      parameters:
+        - name: installCRDs
+          value: "true"
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: cert-manager # !!! SRE ACTION: Ensure this is the namespace where it is currently running
+  syncPolicy:
+    automated:
+      prune: false     # Initially set to false to avoid deleting existing resources
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=false # Set to false since the namespace already exists
+      - RespectIgnoreDifferences=true
