@@ -1,0 +1,16 @@
+USER-SUPPLIED VALUES:
+auth:
+  enabled: true
+global:
+  postgresql:
+    auth:
+      existingSecret: postgres-credentials
+primary:
+  persistence:
+    size: 10Gi
+    storageClass: longhorn
+  resources:
+    limits:
+      memory: 1Gi
+    requests:
+      memory: 512Mi
