@@ -1,66 +1,79 @@
-🚀 SRE Self-Healing Kubernetes Monitoring Stack
-This project implements a fully automated, GitOps-driven monitoring and observability stack on Kubernetes. It features a custom Python-based RAID status exporter that simulates hardware health and integrates with a professional monitoring pipeline.
+# 🚀 SRE Self-Healing Kubernetes Baseline
 
-🏗 System Architecture
-The project follows the GitOps philosophy using Argo CD as the primary orchestrator.
+[![n8n Health](https://argocd.sikiru.co.uk/api/badge?name=n8n-automation-hub)](https://argocd.sikiru.co.uk/applications/n8n-automation-hub)
+[![Networking Health](https://argocd.sikiru.co.uk/api/badge?name=ingress-nginx)](https://argocd.sikiru.co.uk/applications/ingress-nginx)
+[![Storage Health](https://argocd.sikiru.co.uk/api/badge?name=longhorn-system)](https://argocd.sikiru.co.uk/applications/longhorn-system)
 
-Custom Exporter: A Python application that exposes RAID health metrics at /metrics.
+This repository serves as the **Single Source of Truth** for a production-grade, GitOps-managed Kubernetes cluster.
 
-Prometheus: Automatically discovers the exporter using a ServiceMonitor and scrapes metrics.
+## 🏗 System Architecture
+The cluster is built with a layered defense and connectivity strategy.
 
-Grafana: Provides high-visibility dashboards for real-time hardware status.
+| Layer | Component | Purpose |
+| :--- | :--- | :--- |
+| **0: Network** | Calico | Pod-to-Pod connectivity (CNI) |
+| **1: Edge** | MetalLB / Nginx Ingress | External IPs and Traffic Routing |
+| **2: Storage** | Longhorn | Persistent Block Storage |
+| **3: Security** | Cloudflare Tunnel / Cert-Manager | Internet Bridge & SSL Management |
+| **4: Persistence** | PostgreSQL | Application Database |
+| **5: Apps** | n8n / RAID Exporter | Automation & Hardware Monitoring |
 
-Argo CD: Ensures "Self-Healing" by automatically correcting any configuration drift in the cluster.
+---
 
-📂 Repository Structure
-Plaintext
+## 📂 Repository Structure
+We use the **App-of-Apps** pattern to separate logic from configuration.
 
-.
-├── k8s/                        # Kubernetes Manifests (The "Source of Truth")
-│   ├── deployment.yaml         # Python Exporter Pod & ReplicaSet
-│   ├── service.yaml            # Internal load balancer for the exporter
-│   └── service-monitor.yaml    # The "Bridge" connecting App to Prometheus
-├── src/                        # Application Source Code
-│   └── exporter.py             # Python script for RAID status simulation
-├── monitoring-stack.yaml       # Argo CD Application for Prometheus/Grafana
-├── raid-exporter-app.yaml      # Argo CD Application for our custom code
-├── Dockerfile                  # Container blueprint
-└── README.md                   # You are here!
-🛠 Deployment Instructions
-1. Prerequisites
-A running Kubernetes cluster.
+* **`argocd/`**: Contains "App Launchers" (The Brain).
+* **`k8s/`**: Contains actual Kubernetes Manifests (The Body).
+* **`src/`**: Custom application source code (RAID Exporter).
 
-Argo CD installed in the argocd namespace.
+---
 
-A GitHub Personal Access Token (PAT) for private repo access.
+## 📈 Monitoring Stack & RAID Observation
+The observability pipeline is fully automated:
+1.  **Custom Exporter:** Python script (in `/src`) simulates RAID health.
+2.  **Prometheus:** Discovers the exporter via `ServiceMonitor` and scrapes metrics.
+3.  **Grafana:** Provides the primary dashboard for real-time status.
 
-2. Connect the Repository
-Register your private repository in the Argo CD UI under Settings > Repositories.
+## 🌊 Sync Wave Logic
+We use **Sync Waves** to ensure a stable "Boot Sequence" during a rebuild:
+1.  **Wave 1:** Networking (MetalLB/Ingress)
+2.  **Wave 2:** Security (Cloudflare/Cert-Manager)
+3.  **Wave 3:** SSL (ClusterIssuers)
+4.  **Wave 4:** Data (Postgres)
+5.  **Wave 5:** Applications (n8n, Monitoring)
 
-3. Launch the Stack
-Apply the "Launcher" YAMLs to your cluster:
+---
 
-Bash
+## 🛠 Disaster Recovery
+If the cluster is lost:
+1. Re-install Argo CD.
+2. Add this Repo to Argo CD.
+3. Apply the launchers: `kubectl apply -f argocd/ -n argocd`.
 
-# Deploy the Prometheus & Grafana Stack (Helm)
-kubectl apply -f monitoring-stack.yaml -n argocd
+## 🛠 SRE Adoption & Management
+To transition from manual `kubectl` management to full GitOps, we "claimed" existing resources using the Argo CD adoption ritual. This ensured zero downtime for live services like `argocd.sikiru.co.uk`.
 
-# Deploy the Custom RAID Exporter (GitOps)
-kubectl apply -f raid-exporter-app.yaml -n argocd
-📊 Observability & Self-Healing
-Key Metrics
-node_raid_status: 1 (Healthy), 0 (Failing).
+### **The Adoption Ritual (CLI Commands)**
+Run these to link existing resources to their respective GitOps applications:
 
-up{job="raid-exporter-service"}: Status of the exporter's availability.
+```bash
+# Adopting the Ingress Controller
+kubectl label deployment ingress-nginx-controller -n ingress-nginx app.kubernetes.io/instance=ingress-nginx --overwrite
+
+# Adopting the SSL Cluster Issuers
+kubectl label clusterissuer letsencrypt-cloudflare app.kubernetes.io/instance=cert-manager-config --overwrite
+
+# Adopting existing Ingress Rules
+kubectl label ingress n8n -n n8n app.kubernetes.io/instance=n8n-automation-hub --overwrite
+kubectl label ingress longhorn-dashboard -n longhorn-system app.kubernetes.io/instance=longhorn-system --overwrite
 
 Self-Healing Mechanics
-Infrastructure Level: Argo CD monitors GitHub. If someone manually deletes the ServiceMonitor or modifies the Deployment, Argo CD will automatically revert the changes to match the Git state.
+Drift Detection: Argo CD monitors the cluster 24/7. If a human manually edits a service from LoadBalancer to NodePort, Argo CD will detect the "Drift" and instantly revert it to the LoadBalancer state defined in Git.
 
-Application Level: Kubernetes' ReplicaSet ensures that if the Python pod crashes, a new one is instantly provisioned.
+Orphan Protection: We use the --cascade=orphan flag when deleting foundational applications (like Calico). This ensures the dashboard entry is removed without destroying the underlying pods, maintaining cluster stability.
 
-📈 Dashboard Access
-Grafana: http://grafana.sikiru.co.uk
+🔐 Security & Maintenance
+Secrets Management: This repository contains the Logic for the ClusterIssuer but NOT the raw Cloudflare API Token. Sensitive tokens are stored as manual Kubernetes Secrets in the cert-manager namespace to prevent exposure.
 
-Argo CD: http://argocd.sikiru.co.uk
-
-Note: Default credentials for Grafana are managed via the grafana-admin-credentials secret.
+Argo CD Self-Management: The argocd-config application manages its own ingress and values, creating a "Circular Logic" that makes the management platform itself disaster-resilient.
