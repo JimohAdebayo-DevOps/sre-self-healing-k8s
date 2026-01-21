@@ -1,0 +1,18 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: cert-manager-config
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: 'https://github.com/JimohAdebayo-DevOps/sre-self-healing-k8s.git'
+    path: k8s/cert-manager-config
+    targetRevision: main
+  destination:
+    server: 'https://kubernetes.default.svc'
+    namespace: cert-manager # This is the "Safe House" for SSL tokens
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true

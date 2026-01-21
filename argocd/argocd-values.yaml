@@ -1,0 +1,44 @@
+global:
+  domain: argocd.sikiru.co.uk
+
+configs:
+  params:
+    server.insecure: "true" # Fixes the 404/Redirect loop
+  cm:
+    url: https://argocd.sikiru.co.uk # Sets the public identity
+    dex.config: |
+      connectors:
+        - type: github
+          id: github
+          name: GitHub
+          config:
+            clientID: $dex.github.clientID
+            clientSecret: $dex.github.clientSecret
+            orgs:
+              - name: JimohAdebayo-DevOps
+
+server:
+  insecure: true
+  extraArgs:
+    - --insecure
+
+  service:
+    type: ClusterIP
+    servicePortHttp: 80
+
+  ingress:
+    enabled: true
+    https: false # Crucial: tells Ingress to use port 80
+    ingressClassName: nginx
+    annotations:
+      nginx.ingress.kubernetes.io/ssl-redirect: "false"
+      nginx.ingress.kubernetes.io/force-ssl-redirect: "false"
+      nginx.ingress.kubernetes.io/backend-protocol: "HTTP"
+    hosts:
+      - argocd.sikiru.co.uk
+    paths:
+      - /
+    pathType: Prefix
+
+redis-ha:
+  enabled: false
