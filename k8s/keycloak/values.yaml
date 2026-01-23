@@ -1,12 +1,17 @@
-# Bitnami Keycloak Values
 auth:
   adminUser: admin
   existingSecret: keycloak-admin-secret
   passwordKey: admin-password
 
-# Database: Pointing to your existing Postgres in the n8n namespace
+# Image fix for Bitnami Legacy
+image:
+  registry: docker.io
+  repository: bitnamilegacy/keycloak
+  tag: 26.3.3-debian-12-r0
+
+# Database Configuration
 postgresql:
-  enabled: false # Do not install a new database
+  enabled: false
 
 externalDatabase:
   host: postgresql-db.n8n.svc.cluster.local
@@ -16,12 +21,18 @@ externalDatabase:
   existingSecret: keycloak-db-secret
   existingSecretPasswordKey: password
 
-image:
-  registry: docker.io
-  repository: bitnamilegacy/keycloak
-  tag: 26.3.3-debian-12-r0
+# Keycloak 26 Proxy Fix
+# This resolves the "WARNING: Likely misconfiguration detected"
+proxy: edge
+extraEnvVars:
+  - name: KC_PROXY_HEADERS
+    value: "xforwarded"
+  - name: KC_HOSTNAME_STRICT
+    value: "false"
+  - name: KC_HTTP_ENABLED
+    value: "true"
 
-# Resource Optimization for a 20GB Cluster
+# Resources for your 20GB RAM cluster
 resources:
   limits:
     memory: 2Gi
@@ -30,7 +41,6 @@ resources:
     memory: 1Gi
     cpu: 500m
 
-# Ingress for sso.sikiru.co.uk
 ingress:
   enabled: true
   ingressClassName: nginx
@@ -38,9 +48,3 @@ ingress:
   annotations:
     cert-manager.io/cluster-issuer: letsencrypt-cloudflare
   tls: true
-
-# Reverse Proxy configuration (essential for Nginx Ingress)
-proxy: edge
-
-# Performance: Extra Startup Args
-extraStartupArgs: "--import-realm"
