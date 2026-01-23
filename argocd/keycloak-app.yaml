@@ -1,0 +1,27 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: keycloak
+  namespace: argocd
+spec:
+  project: default
+  sources:
+    - repoURL: https://charts.bitnami.com/bitnami
+      chart: keycloak
+      targetRevision: 25.2.0
+      helm:
+        # This references the second source (your repo) for values
+        valueFiles:
+          - $values/k8s/keycloak/values.yaml
+    - repoURL: https://github.com/JimohAdebayo-DevOps/sre-self-healing-k8s.git
+      targetRevision: main
+      ref: values # This 'ref' matches the '$values' variable above
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: keycloak
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

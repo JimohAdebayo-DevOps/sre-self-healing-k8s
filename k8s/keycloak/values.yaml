@@ -1,0 +1,41 @@
+# Bitnami Keycloak Values
+auth:
+  adminUser: admin
+  existingSecret: keycloak-admin-secret
+  passwordKey: admin-password
+
+# Database: Pointing to your existing Postgres in the n8n namespace
+postgresql:
+  enabled: false # Do not install a new database
+
+externalDatabase:
+  host: postgresql-db.n8n.svc.cluster.local
+  port: 5432
+  user: keycloak
+  database: keycloak
+  existingSecret: keycloak-db-secret
+  existingSecretPasswordKey: password
+
+# Resource Optimization for a 20GB Cluster
+resources:
+  limits:
+    memory: 2Gi
+    cpu: 1000m
+  requests:
+    memory: 1Gi
+    cpu: 500m
+
+# Ingress for sso.sikiru.co.uk
+ingress:
+  enabled: true
+  ingressClassName: nginx
+  hostname: sso.sikiru.co.uk
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-cloudflare
+  tls: true
+
+# Reverse Proxy configuration (essential for Nginx Ingress)
+proxy: edge
+
+# Performance: Extra Startup Args
+extraStartupArgs: "--import-realm"
