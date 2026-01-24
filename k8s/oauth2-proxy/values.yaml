@@ -1,0 +1,28 @@
+config:
+  existingSecret: oauth2-proxy-creds
+  configFile: |-
+    # The of your Keycloak Realm
+    oidc_issuer_url = "https://sso.sikiru.co.uk/realms/Sikiru-Lab"
+    # Allow any email from domain (or use * for all)
+    email_domains = [ "*" ]
+    upstreams = [ "static://200" ]
+    provider = "oidc"
+    # Cross-subdomain cookie logic
+    cookie_domains = [ ".sikiru.co.uk" ]
+    whitelist_domains = [ ".sikiru.co.uk" ]
+    # Critical for Nginx
+    set_xauthrequest = true
+    set_authorization_header = true
+
+ingress:
+  enabled: true
+  ingressClassName: nginx
+  path: /oauth2
+  hosts:
+    - n8n.sikiru.co.uk
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-cloudflare
+  tls:
+    - secretName: n8n-oauth2-proxy-tls
+      hosts:
+        - n8n.sikiru.co.uk
