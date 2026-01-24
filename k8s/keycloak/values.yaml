@@ -48,3 +48,12 @@ ingress:
   annotations:
     cert-manager.io/cluster-issuer: letsencrypt-cloudflare
   tls: true
+
+# Update this section in your k8s/keycloak/values.yaml
+extraEnvVars:
+  - name: KC_PROXY_HEADERS
+    value: "xforwarded"
+  - name: KC_HOSTNAME_STRICT
+    value: "false"
+  - name: KC_HTTP_ENABLED
+    value: "true"
