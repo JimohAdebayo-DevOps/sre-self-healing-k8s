@@ -3,13 +3,13 @@ auth:
   existingSecret: keycloak-admin-secret
   passwordKey: admin-password
 
-# Image fix for Bitnami Legacy
+# Fix for Bitnami image deprecation (2025/2026)
 image:
   registry: docker.io
   repository: bitnamilegacy/keycloak
   tag: 26.3.3-debian-12-r0
 
-# Database Configuration
+# Disable internal DB and point to your n8n Postgres
 postgresql:
   enabled: false
 
@@ -21,18 +21,21 @@ externalDatabase:
   existingSecret: keycloak-db-secret
   existingSecretPasswordKey: password
 
-# Keycloak 26 Proxy Fix
-# This resolves the "WARNING: Likely misconfiguration detected"
+# Keycloak 26 Proxy & Hostname Configuration
 proxy: edge
 extraEnvVars:
   - name: KC_PROXY_HEADERS
     value: "xforwarded"
-  - name: KC_HOSTNAME_STRICT
-    value: "false"
   - name: KC_HTTP_ENABLED
     value: "true"
+  - name: KC_HOSTNAME
+    value: "https://sso.sikiru.co.uk"
+  - name: KC_HOSTNAME_STRICT
+    value: "false"
+  - name: KC_HOSTNAME_STRICT_HTTPS
+    value: "false"
 
-# Resources for your 20GB RAM cluster
+# Optimized resources for your cluster
 resources:
   limits:
     memory: 2Gi
@@ -41,16 +44,18 @@ resources:
     memory: 1Gi
     cpu: 500m
 
+# Ingress aligned with your stable ArgoCD settings
 ingress:
   enabled: true
   ingressClassName: nginx
   hostname: sso.sikiru.co.uk
   annotations:
     cert-manager.io/cluster-issuer: letsencrypt-cloudflare
-    # THE FIX: Matches your successful patch
+    # Cloudflare compatibility (Relaxed Origin Redirects)
     nginx.ingress.kubernetes.io/ssl-redirect: "false"
     nginx.ingress.kubernetes.io/force-ssl-redirect: "false"
-    # THE PREVENTATIVE FIX: Prevents "400 Bad Request" on login
+    nginx.ingress.kubernetes.io/backend-protocol: "HTTP"
+    # Large cookie support for Keycloak
     nginx.ingress.kubernetes.io/proxy-buffer-size: "128k"
     nginx.ingress.kubernetes.io/proxy-buffers-number: "4"
     nginx.ingress.kubernetes.io/proxy-busy-buffers-size: "256k"
@@ -58,13 +63,3 @@ ingress:
     - secretName: sso.sikiru.co.uk-tls
       hosts:
         - sso.sikiru.co.uk
-
-extraEnvVars:
-  - name: KC_PROXY_HEADERS
-    value: "xforwarded"
-  - name: KC_HTTP_ENABLED
-    value: "true"
-  - name: KC_HOSTNAME
-    value: "https://sso.sikiru.co.uk"
-  - name: KC_HOSTNAME_STRICT_HTTPS
-    value: "false"
