@@ -41,6 +41,24 @@ resources:
     memory: 1Gi
     cpu: 500m
 
+ingress:
+  enabled: true
+  ingressClassName: nginx
+  hostname: sso.sikiru.co.uk
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-cloudflare
+    # THE FIX: Matches your successful patch
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "false"
+    # THE PREVENTATIVE FIX: Prevents "400 Bad Request" on login
+    nginx.ingress.kubernetes.io/proxy-buffer-size: "128k"
+    nginx.ingress.kubernetes.io/proxy-buffers-number: "4"
+    nginx.ingress.kubernetes.io/proxy-busy-buffers-size: "256k"
+  tls:
+    - secretName: sso.sikiru.co.uk-tls
+      hosts:
+        - sso.sikiru.co.uk
+
 extraEnvVars:
   - name: KC_PROXY_HEADERS
     value: "xforwarded"
@@ -50,19 +68,3 @@ extraEnvVars:
     value: "https://sso.sikiru.co.uk"
   - name: KC_HOSTNAME_STRICT_HTTPS
     value: "false"
-
-ingress:
-  enabled: true
-  ingressClassName: nginx
-  hostname: sso.sikiru.co.uk
-  annotations:
-    cert-manager.io/cluster-issuer: letsencrypt-cloudflare
-    nginx.ingress.kubernetes.io/proxy-buffer-size: "128k"
-    # ALIGN WITH WORKING ARGOCD SETTINGS:
-    nginx.ingress.kubernetes.io/ssl-redirect: "false"
-    nginx.ingress.kubernetes.io/force-ssl-redirect: "false"
-    nginx.ingress.kubernetes.io/backend-protocol: "HTTP"
-  tls:
-    - secretName: sso.sikiru.co.uk-tls
-      hosts:
-        - sso.sikiru.co.uk
