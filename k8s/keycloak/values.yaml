@@ -47,6 +47,10 @@ ingress:
   hostname: sso.sikiru.co.uk
   annotations:
     cert-manager.io/cluster-issuer: letsencrypt-cloudflare
+    nginx.ingress.kubernetes.io/proxy-buffer-size: "128k"
+    nginx.ingress.kubernetes.io/proxy-buffers-number: "4"
+    nginx.ingress.kubernetes.io/proxy-busy-buffers-size: "256k"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
   tls: true
 
 # Update this section in your k8s/keycloak/values.yaml
@@ -57,3 +61,5 @@ extraEnvVars:
     value: "false"
   - name: KC_HTTP_ENABLED
     value: "true"
+  - name: KC_HOSTNAME_STRICT_HTTPS
+    value: "false"
