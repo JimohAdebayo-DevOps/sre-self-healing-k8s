@@ -41,6 +41,16 @@ resources:
     memory: 1Gi
     cpu: 500m
 
+extraEnvVars:
+  - name: KC_PROXY_HEADERS
+    value: "xforwarded"
+  - name: KC_HTTP_ENABLED
+    value: "true"
+  - name: KC_HOSTNAME
+    value: "https://sso.sikiru.co.uk"
+  - name: KC_HOSTNAME_STRICT_HTTPS
+    value: "false"
+
 ingress:
   enabled: true
   ingressClassName: nginx
@@ -48,20 +58,11 @@ ingress:
   annotations:
     cert-manager.io/cluster-issuer: letsencrypt-cloudflare
     nginx.ingress.kubernetes.io/proxy-buffer-size: "128k"
-    nginx.ingress.kubernetes.io/proxy-buffers-number: "4"
-    nginx.ingress.kubernetes.io/proxy-busy-buffers-size: "256k"
-    nginx.ingress.kubernetes.io/ssl-redirect: "true"
-  tls: true
-
-# Update this section in your k8s/keycloak/values.yaml
-extraEnvVars:
-  - name: KC_PROXY_HEADERS
-    value: "xforwarded"
-  - name: KC_HOSTNAME_STRICT
-    value: "false"
-  - name: KC_HTTP_ENABLED
-    value: "true"
-  - name: KC_HOSTNAME_STRICT_HTTPS
-    value: "false"
-  - name: KC_PROXY
-    value: "edge"
+    # ALIGN WITH WORKING ARGOCD SETTINGS:
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "false"
+    nginx.ingress.kubernetes.io/backend-protocol: "HTTP"
+  tls:
+    - secretName: sso.sikiru.co.uk-tls
+      hosts:
+        - sso.sikiru.co.uk
