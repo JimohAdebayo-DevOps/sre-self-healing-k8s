@@ -5,8 +5,8 @@ metadata:
   namespace: longhorn-system
   annotations:
     kubernetes.io/ingress.class: nginx
-    cert-manager.io/cluster-issuer: letsencrypt-cloudflare # Re-use your n8n issuer
-    nginx.ingress.kubernetes.io/ssl-redirect: "false"      # Keep this FALSE to avoid loops
+    cert-manager.io/cluster-issuer: letsencrypt-cloudflare # Re-use n8n issuer
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"      # This is kept FALSE to avoid loops
 spec:
   ingressClassName: nginx
   tls:

@@ -11,7 +11,7 @@ spec:
     targetRevision: main
   destination:
     server: 'https://kubernetes.default.svc'
-    namespace: cert-manager # This is the "Safe House" for SSL tokens
+    namespace: cert-manager
   syncPolicy:
     automated:
       prune: true

@@ -8,10 +8,10 @@ spec:
   source:
     repoURL: 'https://github.com/JimohAdebayo-DevOps/sre-self-healing-k8s.git'
     targetRevision: HEAD
-    path: k8s # Points Argo CD to the folder where your deployment.yaml is
+    path: k8s # Points Argo CD to the folder where the deployment.yaml is
   destination:
     server: 'https://kubernetes.default.svc'
-    namespace: monitoring # We deploy into the 'monitoring' room
+    namespace: monitoring
   syncPolicy:
     automated:
       prune: true

@@ -28,7 +28,7 @@ server:
 
   ingress:
     enabled: true
-    https: false # Crucial: tells Ingress to use port 80
+    https: false # tells Ingress to use port 80
     ingressClassName: nginx
     annotations:
       nginx.ingress.kubernetes.io/ssl-redirect: "false"

@@ -13,7 +13,7 @@ spec:
     targetRevision: main
   destination:
     server: 'https://kubernetes.default.svc'
-    namespace: n8n # Match your current namespace
+    namespace: n8n
   syncPolicy:
     automated:
       prune: false 

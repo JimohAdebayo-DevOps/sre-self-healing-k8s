@@ -12,8 +12,7 @@ spec:
     - repoURL: 'https://github.com/metallb/metallb.git'
       path: config/manifests
       targetRevision: v0.14.5 
-    
-    # SOURCE 2: Your Local IP Pool Configuration
+
     - repoURL: 'https://github.com/JimohAdebayo-DevOps/sre-self-healing-k8s.git'
       targetRevision: main
       path: k8s/metallb # Points to config.yaml

@@ -47,6 +47,8 @@ spec:
           ports:
             - containerPort: 5678
           env:
+            - name: N8N_AUTH_EXCLUDE_ENDPOINTS
+              value: "/healthz"
             - name: DB_TYPE
               value: postgresdb
             - name: DB_POSTGRESDB_HOST
@@ -63,6 +65,8 @@ spec:
               value: postgres
             - name: N8N_PROXY_HOPS
               value: "1"
+            - name: N8N_USER_MANAGEMENT_DISABLED
+              value: "false"
             - name: DB_POSTGRESDB_PASSWORD
               valueFrom:
                 secretKeyRef:

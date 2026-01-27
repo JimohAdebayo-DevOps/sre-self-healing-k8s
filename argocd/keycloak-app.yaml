@@ -10,7 +10,7 @@ spec:
       chart: keycloak
       targetRevision: 25.2.0
       helm:
-        # This references the second source (your repo) for values
+        # This references the second source for values
         valueFiles:
           - $values/k8s/keycloak/values.yaml
     - repoURL: https://github.com/JimohAdebayo-DevOps/sre-self-healing-k8s.git

@@ -20,7 +20,6 @@ spec:
             enabled: true
             ingressClassName: nginx
             annotations:
-              # CLOUDFLARE REDIRECT FIXES (Matches your ArgoCD setup)
               nginx.ingress.kubernetes.io/ssl-redirect: "false"
               nginx.ingress.kubernetes.io/force-ssl-redirect: "false"
               nginx.ingress.kubernetes.io/backend-protocol: "HTTP"

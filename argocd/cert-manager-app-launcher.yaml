@@ -10,14 +10,14 @@ spec:
   source:
     chart: cert-manager
     repoURL: https://charts.jetstack.io
-    targetRevision: 1.14.0  # !!! SRE ACTION: Change this to match your CURRENT version
+    targetRevision: 1.14.0
     helm:
       parameters:
         - name: installCRDs
           value: "true"
   destination:
     server: https://kubernetes.default.svc
-    namespace: cert-manager # !!! SRE ACTION: Ensure this is the namespace where it is currently running
+    namespace: cert-manager
   syncPolicy:
     automated:
       prune: false     # Initially set to false to avoid deleting existing resources

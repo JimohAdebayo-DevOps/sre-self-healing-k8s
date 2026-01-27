@@ -5,7 +5,7 @@ metadata:
   namespace: argocd
 spec:
   project: default
-  sources:  # Notice this is now 'sources' (plural)
+  sources:
     - repoURL: https://charts.bitnami.com/bitnami
       chart: postgresql
       targetRevision: 18.2.0
@@ -20,7 +20,7 @@ spec:
     server: https://kubernetes.default.svc
     namespace: n8n
   syncPolicy:
-    # IMPORTANT: We leave automation OFF for the very first sync
+    # IMPORTANT: leave automation OFF for the very first sync
     # to ensure it doesn't try to "re-install" over your live data.
     syncOptions:
       - CreateNamespace=true

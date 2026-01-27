@@ -9,7 +9,7 @@ spec:
     spec:
       template:
         spec:
-          # This ensures the backup job runs on worker-01 where the RAID is
+          # This is to ensure the backup job runs on worker-01 where the RAID is
           # AND where n8n should be to access the RWO volume
           nodeSelector:
             kubernetes.io/hostname: k8s-worker-01 
@@ -31,7 +31,7 @@ spec:
               FS_FILE="/backup/n8n_files_$DATE.tar.gz"
 
               echo "--- Starting Full Production Backup ---"
-              
+
               # 1. Database Backup
               echo "Dumping Database..."
               pg_dump -h n8n-postgres -U postgres n8n_db | gzip > $DB_FILE
@@ -54,7 +54,7 @@ spec:
               mountPath: /backup
             - name: n8n-longhorn-data
               mountPath: /n8n-data
-              readOnly: true # Safety first: Backup should never change original files
+              readOnly: true # This is for Safety so Backup should not change original files
           restartPolicy: OnFailure
           volumes:
           - name: raid5-storage

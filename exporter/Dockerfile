@@ -10,8 +10,8 @@ COPY src/requirements.txt .
 # 4. Install libraries from the requirements file
 RUN pip install --no-cache-dir -r requirements.txt
 
-# 5. Copy your exporter code from the src folder
+# 5. Copy exporter code from the src folder
 COPY src/exporter.py .
 
-# 6. Run the script (matches your new filename)
+# 6. Run the script (matches new filename)
 CMD ["python", "exporter.py"]

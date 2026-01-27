@@ -3,13 +3,13 @@ auth:
   existingSecret: keycloak-admin-secret
   passwordKey: admin-password
 
-# Fix for Bitnami image deprecation
+# Fixed for Bitnami image deprecation
 image:
   registry: docker.io
   repository: bitnamilegacy/keycloak
   tag: 26.3.3-debian-12-r0
 
-# Disable internal DB and point to your n8n Postgres
+# Disabled internal DB and point to n8n Postgres
 postgresql:
   enabled: false
 
@@ -24,16 +24,14 @@ externalDatabase:
 # Keycloak 26 Proxy & Hostname Configuration
 proxy: edge
 extraEnvVars:
+  - name: KC_PROXY
+    value: "edge" 
   - name: KC_PROXY_HEADERS
     value: "xforwarded"
-  - name: KC_HTTP_ENABLED
-    value: "true"
-  - name: KC_HOSTNAME
-    value: "https://sso.sikiru.co.uk"
-  - name: KC_HOSTNAME_STRICT
-    value: "false"
-  - name: KC_HOSTNAME_STRICT_HTTPS
-    value: "false"
+  - name: KC_HOSTNAME_URL
+    value: "https://sso.sikiru.co.uk" 
+  - name: KC_HTTP_RELATIVE_PATH
+    value: "/"
 
 # Optimized resources
 resources:

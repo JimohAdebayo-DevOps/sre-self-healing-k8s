@@ -2,34 +2,47 @@ config:
   existingSecret: oauth2-proxy-creds
   configFile: |-
     oidc_issuer_url = "https://sso.sikiru.co.uk/realms/Sikiru-Lab"
-    # Mandatory scopes for email validation
+    # This is a andatory scopes for email validation
     scope = "openid profile email"
     email_domains = [ "*" ]
     upstreams = [ "static://200" ]
     provider = "oidc"
+    redirect_url = "https://oauth2.sikiru.co.uk/oauth2/callback"
     cookie_domains = [ ".sikiru.co.uk" ]
     whitelist_domains = [ ".sikiru.co.uk" ]
-    
+    # FIXED THE 500 CALLBACK ERROR
+    insecure_oidc_allow_unverified_email = true
+
     # HARDENING FIXES:
-    # 1. Stops the proxy from redirecting internal HTTP to external HTTPS
+    # Stops the proxy from redirecting internal HTTP to external HTTPS
     reverse_proxy = true
     force_https = false
-    # 2. Ensures the proxy trusts the Ingress headers
+    # Ensures the proxy trusts the Ingress headers
     set_xauthrequest = true
     set_authorization_header = true
     ssl_insecure_skip_verify = true
 
 ingress:
   enabled: true
-  # 3. CRITICAL: Tells Nginx to pick up this Ingress
-  ingressClassName: nginx 
-  path: /oauth2
+  # Standard field
+  ingressClassName: nginx
+  # Legacy/Alternative field
+  className: nginx
+  # Path settings
+  path: /
+  # Corrected 'hosts' vs 'hostname'
   hosts:
-    - n8n.sikiru.co.uk
+    - oauth2.sikiru.co.uk
   annotations:
+    # Fallback annotation (The Ingress Controller reads this if the spec fails)
+    kubernetes.io/ingress.class: nginx
     cert-manager.io/cluster-issuer: letsencrypt-cloudflare
     nginx.ingress.kubernetes.io/ssl-redirect: "false"
+    nginx.ingress.kubernetes.io/proxy-set-headers: "X-Forwarded-Proto=https"
+    nginx.ingress.kubernetes.io/proxy-buffer-size: "16k"
+    nginx.ingress.kubernetes.io/proxy-buffers-number: "4"
+    nginx.ingress.kubernetes.io/large-client-header-buffers: "4 16k"
   tls:
     - secretName: n8n-oauth2-proxy-tls
       hosts:
-        - n8n.sikiru.co.uk
+        - oauth2.sikiru.co.uk

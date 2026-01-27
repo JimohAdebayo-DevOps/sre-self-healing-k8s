@@ -11,7 +11,7 @@ spec:
     path: k8s/n8n  # Points specifically to the new n8n folder
   destination:
     server: 'https://kubernetes.default.svc'
-    namespace: n8n # This tells Argo to deploy it into the n8n namespace
+    namespace: n8n 
   syncPolicy:
     automated:
       prune: true
