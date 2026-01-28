@@ -1,0 +1,26 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: jenkins
+  namespace: argocd
+spec:
+  project: default
+  sources:
+    - repoURL: 'https://charts.jenkins.io'
+      chart: jenkins
+      targetRevision: 5.1.5
+      helm:
+        valueFiles:
+          - $values/k8s/jenkins/values.yaml
+    - repoURL: 'https://github.com/JimohAdebayo-DevOps/sre-self-healing-k8s.git'
+      targetRevision: main
+      ref: values
+  destination:
+    server: 'https://kubernetes.default.svc'
+    namespace: jenkins
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

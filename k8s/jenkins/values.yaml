@@ -1,0 +1,55 @@
+controller:
+  componentName: "jenkins-controller"
+  image: "jenkins/jenkins"
+  tag: "lts"
+  
+  # Resource Management
+  resources:
+    requests:
+      cpu: "100m"
+      memory: "1Gi"
+    limits:
+      cpu: "1000m"
+      memory: "2Gi"
+
+  # Networking (Ingress)
+  ingress:
+    enabled: true
+    ingressClassName: nginx
+    hostName: jenkins.sikiru.co.uk
+    annotations:
+      cert-manager.io/cluster-issuer: letsencrypt-cloudflare
+      # Using native annotations since snippets are disabled
+      nginx.ingress.kubernetes.io/proxy-body-size: "50m"
+      nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    tls:
+      - secretName: jenkins-tls-cert
+        hosts:
+          - jenkins.sikiru.co.uk
+
+  # Storage (Longhorn)
+  persistence:
+    enabled: true
+    storageClass: longhorn
+    size: "10Gi"
+
+  # Automated Plugin Installation
+  installPlugins:
+    - kubernetes:4212.v26a_b_7713e274
+    - git:5.2.1
+    - configuration-as-code:1775.v810dc950b_514
+    - oic-auth:4.331.v7c57c6f2a_627 # Keycloak SSO Plugin
+    - workflow-aggregator:596.v8b_24a_965e766
+
+  # JCasC: This pre-configures Jenkins to use Keycloak on first boot
+  JCasC:
+    defaultConfig: true
+    configScripts:
+      welcome-message: |
+        jenkins:
+          systemMessage: "Welcome to Sikiru-Lab Jenkins CI/CD. Authenticated via Keycloak."
+
+# Service Account for Ephemeral Agents
+serviceAccount:
+  create: true
+  name: jenkins
