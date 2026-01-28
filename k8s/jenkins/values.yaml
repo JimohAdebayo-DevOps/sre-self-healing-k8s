@@ -6,6 +6,7 @@ controller:
     existingSecret: "jenkins-admin-credentials"
     userKey: "jenkins-admin-user"
     passwordkey: "jenkins-admin-password"
+  installPlugins: []
 # Resource Management
   resources:
     requests:
@@ -35,15 +36,6 @@ controller:
     enabled: true
     storageClass: longhorn
     size: "10Gi"
-
- #  Automated Plugin Installation
- #  installPlugins:
- #   - kubernetes:4212.v26a_b_7713e274
- #   - git:5.2.1
- #   - configuration-as-code:1775.v810dc950b_514
- #   - oic-auth:4.331.v7c57c6f2a_627 # Keycloak SSO Plugin
- #   - workflow-aggregator:596.v8b_24a_965e766
-
   # JCasC: This pre-configures Jenkins to use Keycloak on first boot
   JCasC:
     defaultConfig: true
