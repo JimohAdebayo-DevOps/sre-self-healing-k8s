@@ -1,6 +1,7 @@
 controller:
   componentName: "jenkins-controller"
-  image: "jenkins/jenkins"
+  registry: "docker.io"
+  repository: "jenkins/jenkins"
   tag: "lts"
   
   # Resource Management
