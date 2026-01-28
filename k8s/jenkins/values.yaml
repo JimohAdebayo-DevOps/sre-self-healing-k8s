@@ -1,4 +1,5 @@
 controller:
+  tag: "2.479.3-lts"
   securityContext:
     runAsUser: 1000
     fsGroup: 1000
