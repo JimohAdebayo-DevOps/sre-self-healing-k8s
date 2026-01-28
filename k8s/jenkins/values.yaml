@@ -1,10 +1,4 @@
-controller:
-  componentName: "jenkins-controller"
-  registry: "docker.io"
-  repository: "jenkins/jenkins"
-  tag: "lts"
-  
-  # Resource Management
+# Resource Management
   resources:
     requests:
       cpu: "100m"
