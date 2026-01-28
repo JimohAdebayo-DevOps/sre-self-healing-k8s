@@ -1,6 +1,6 @@
 controller:
   image:
-    tag: "2.479.3-lts"
+    tag: "2.479.3-lts-jdk21"
   securityContext:
     runAsUser: 1000
     fsGroup: 1000
