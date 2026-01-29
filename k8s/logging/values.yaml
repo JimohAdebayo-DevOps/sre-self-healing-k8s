@@ -1,0 +1,33 @@
+loki:
+  enabled: true
+  isDefault: false
+  persistence:
+    enabled: true
+    storageClassName: longhorn # Uses RAID-backed storage
+    size: 10Gi
+    accessModes:
+      - ReadWriteOnce
+
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 100m
+      memory: 256Mi
+
+promtail:
+  enabled: true
+  # Promtail needs to run on every node to catch all logs
+  tolerations:
+    - operator: Exists 
+  config:
+    lokiAddress: http://logging-stack-loki:3100/loki/api/v1/push
+
+# Disable things already have or don't need
+grafana:
+  enabled: false
+prometheus:
+  enabled: false
+fluent-bit:
+  enabled: false

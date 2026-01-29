@@ -1,0 +1,35 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: logging-stack
+  namespace: argocd
+  annotations:
+    # Wave 4: Starts alongside n8n/Monitoring
+    argocd.argoproj.io/sync-wave: "4"
+spec:
+  project: default
+  sources:
+    # SOURCE 1: The Official Software
+    - repoURL: https://grafana.github.io/helm-charts
+      chart: loki-stack
+      targetRevision: 2.10.2
+      helm:
+        valueFiles:
+          # This variable ($values) refers to Source 2 below
+          - $values/k8s/logging/values.yaml
+
+    # SOURCE 2: Configuration (Values File)
+    - repoURL: https://github.com/JimohAdebayo-DevOps/sre-self-healing-k8s.git
+      targetRevision: main
+      ref: values # This creates the reference used above
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: logging
+  
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
