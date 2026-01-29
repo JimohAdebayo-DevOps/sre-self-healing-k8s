@@ -1,5 +1,6 @@
 loki:
   enabled: true
+  auth_enabled: false
   isDefault: false
   persistence:
     enabled: true
