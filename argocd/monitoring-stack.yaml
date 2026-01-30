@@ -12,6 +12,19 @@ spec:
     helm:
       values: |
         grafana:
+          additionalDataSources:
+            - name: Loki
+              type: loki
+              uid: loki
+              url: http://logging-stack-loki.logging.svc.cluster.local:3100
+              access: proxy
+              isDefault: false
+              jsonData:
+                derivedFields:
+                  - datasourceUid: tempo
+                    matcherRegex: "traceID=(\\w+)"
+                    name: TraceID
+                    url: "$${__value.raw}"
           admin:
             existingSecret: "grafana-admin-credentials"
             userKey: admin-user
