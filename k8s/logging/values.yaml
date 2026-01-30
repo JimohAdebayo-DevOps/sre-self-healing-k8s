@@ -24,9 +24,9 @@ loki:
 promtail:
   enabled: true
   # Promtail needs to run on every node to catch all logs
-  tolerations:
-    - operator: Exists 
-  clients:
+  config:
+    lokiAddress: http://logging-stack-loki.logging.svc.cluster.local:3100/loki/api/v1/push
+    clients:
       - url: http://logging-stack-loki.logging.svc.cluster.local:3100/loki/api/v1/push
 
 # Disable things already have or don't need
