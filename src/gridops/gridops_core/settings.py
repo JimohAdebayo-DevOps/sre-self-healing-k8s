@@ -159,6 +159,6 @@ LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = '/'
 # SECURITY: Trust the 'X-Forwarded-Proto' header coming from Cloudflare/Ingress
 # This is to fix the "Invalid parameter: redirect_uri" error by forcing HTTPS links.
-SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'http')
 USE_X_FORWARDED_HOST = True
 USE_X_FORWARDED_PORT = True
