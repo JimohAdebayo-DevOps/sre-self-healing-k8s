@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gridops-portal
+  namespace: n8n # Colocate with DB and n8n for easier networking
+  labels:
+    app: gridops
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: gridops
+  template:
+    metadata:
+      labels:
+        app: gridops
+    spec:
+      containers:
+        - name: django
+          image: jimoh1990/gridops:v1
+          ports:
+            - containerPort: 8000
+          env:
+            # Connect existing HA Postgres
+            - name: DB_HOST
+              value: "postgresql-db.n8n.svc.cluster.local"
+            - name: DB_NAME
+              value: "gridops"
+            - name: DB_USER
+              value: "postgres"
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-credentials
+                  key: postgres-password
+            - name: SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: gridops-secrets
+                  key: django-secret-key
+            - name: OIDC_RP_CLIENT_ID
+              value: "gridops-portal"
+            - name: OIDC_RP_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: gridops-secrets
+                  key: oidc-secret

@@ -1,0 +1,8 @@
+django>=4.2
+gunicorn
+psycopg2-binary
+mozilla-django-oidc  # For Keycloak SSO
+requests             # For talking to Jenkins/Prometheus APIs
+kubernetes           # To read cluster status directly
+python-jenkins       # To trigger Jenkins jobs
+whitenoise           # For serving static files in production
