@@ -6,3 +6,4 @@ requests             # For talking to Jenkins/Prometheus APIs
 kubernetes           # To read cluster status directly
 python-jenkins       # To trigger Jenkins jobs
 whitenoise           # For serving static files in production
+PyGithub             # To have access to write to github
