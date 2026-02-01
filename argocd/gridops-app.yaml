@@ -1,0 +1,24 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: gridops-portal
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+  labels:
+    component: internal-developer-platform
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/JimohAdebayo-DevOps/sre-self-healing-k8s.git
+    targetRevision: main
+    path: k8s/gridops
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: n8n
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
