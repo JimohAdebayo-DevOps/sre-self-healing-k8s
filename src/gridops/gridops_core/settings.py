@@ -146,7 +146,7 @@ OIDC_RP_CLIENT_ID = os.environ.get('OIDC_RP_CLIENT_ID')
 OIDC_RP_CLIENT_SECRET = os.environ.get('OIDC_RP_CLIENT_SECRET')
 
 # 3. Define the Signing Key (Use the secret key as a fallback)
-OIDC_RP_SIGN_ALGO = 'HS256'
+OIDC_RP_SIGN_ALGO = 'RS256'
 
 # 4. Keycloak Endpoints (Pointing to your SSO server)
 OIDC_OP_AUTHORIZATION_ENDPOINT = "https://sso.sikiru.co.uk/realms/Sikiru-Lab/protocol/openid-connect/auth"
