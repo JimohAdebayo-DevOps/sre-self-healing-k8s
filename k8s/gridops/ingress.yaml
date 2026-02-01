@@ -5,9 +5,9 @@ metadata:
   namespace: n8n
   annotations:
     cert-manager.io/cluster-issuer: letsencrypt-cloudflare
-    nginx.ingress.kubernetes.io/ssl-redirect: "true"
     nginx.ingress.kubernetes.io/backend-protocol: HTTP
     nginx.ingress.kubernetes.io/force-ssl-redirect: "false"
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
 spec:
   ingressClassName: nginx
   rules:
