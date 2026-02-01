@@ -149,10 +149,10 @@ OIDC_RP_CLIENT_SECRET = os.environ.get('OIDC_RP_CLIENT_SECRET')
 OIDC_RP_SIGN_ALGO = 'HS256'
 
 # 4. Keycloak Endpoints (Pointing to your SSO server)
-OIDC_OP_AUTHORIZATION_ENDPOINT = "https://sso.sikiru.co.uk/realms/sikiru-lab/protocol/openid-connect/auth"
-OIDC_OP_TOKEN_ENDPOINT = "https://sso.sikiru.co.uk/realms/sikiru-lab/protocol/openid-connect/token"
-OIDC_OP_USER_ENDPOINT = "https://sso.sikiru.co.uk/realms/sikiru-lab/protocol/openid-connect/userinfo"
-OIDC_OP_JWKS_ENDPOINT = "https://sso.sikiru.co.uk/realms/sikiru-lab/protocol/openid-connect/certs"
+OIDC_OP_AUTHORIZATION_ENDPOINT = "https://sso.sikiru.co.uk/realms/Sikiru-Lab/protocol/openid-connect/auth"
+OIDC_OP_TOKEN_ENDPOINT = "https://sso.sikiru.co.uk/realms/Sikiru-Lab/protocol/openid-connect/token"
+OIDC_OP_USER_ENDPOINT = "https://sso.sikiru.co.uk/realms/Sikiru-Lab/protocol/openid-connect/userinfo"
+OIDC_OP_JWKS_ENDPOINT = "https://sso.sikiru.co.uk/realms/Sikiru-Lab/protocol/openid-connect/certs"
 
 # 5. Redirect Behavior
 LOGIN_REDIRECT_URL = '/'
