@@ -37,6 +37,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'mozilla_django_oidc',
 ]
 
 MIDDLEWARE = [
@@ -124,4 +125,30 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 import os
 STATIC_ROOT = BASE_DIR / "staticfiles"
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
+# ==============================================
+# KEYCLOAK SSO CONFIGURATION (GridOps)
+# ==============================================
+import os
 
+# 1. To tell Django to use Keycloak for Auth
+AUTHENTICATION_BACKENDS = (
+    'mozilla_django_oidc.auth.OIDCAuthenticationBackend',
+    'django.contrib.auth.backends.ModelBackend',  # Fallback for local admin
+)
+
+# 2. Read the Secrets injected via Kubernetes
+OIDC_RP_CLIENT_ID = os.environ.get('OIDC_RP_CLIENT_ID')
+OIDC_RP_CLIENT_SECRET = os.environ.get('OIDC_RP_CLIENT_SECRET')
+
+# 3. Define the Signing Key (Use the secret key as a fallback)
+OIDC_RP_SIGN_ALGO = 'HS256'
+
+# 4. Keycloak Endpoints (Pointing to your SSO server)
+OIDC_OP_AUTHORIZATION_ENDPOINT = "https://sso.sikiru.co.uk/realms/sikiru-lab/protocol/openid-connect/auth"
+OIDC_OP_TOKEN_ENDPOINT = "https://sso.sikiru.co.uk/realms/sikiru-lab/protocol/openid-connect/token"
+OIDC_OP_USER_ENDPOINT = "https://sso.sikiru.co.uk/realms/sikiru-lab/protocol/openid-connect/userinfo"
+OIDC_OP_JWKS_ENDPOINT = "https://sso.sikiru.co.uk/realms/sikiru-lab/protocol/openid-connect/certs"
+
+# 5. Redirect Behavior
+LOGIN_REDIRECT_URL = '/'
+LOGOUT_REDIRECT_URL = '/'
