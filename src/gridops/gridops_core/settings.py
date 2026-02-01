@@ -157,3 +157,8 @@ OIDC_OP_JWKS_ENDPOINT = "https://sso.sikiru.co.uk/realms/Sikiru-Lab/protocol/ope
 # 5. Redirect Behavior
 LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = '/'
+# SECURITY: Trust the 'X-Forwarded-Proto' header coming from Cloudflare/Ingress
+# This is to fix the "Invalid parameter: redirect_uri" error by forcing HTTPS links.
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+USE_X_FORWARDED_HOST = True
+USE_X_FORWARDED_PORT = True
