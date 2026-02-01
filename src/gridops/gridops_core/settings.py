@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-olcghcqkn*-u=m!u^@*r+)=+$0ia=#&!nipy$fgtu@^^)epdym
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['portal.sikiru.co.uk', 'localhost', '127.0.0.1']
 
 
 # Application definition
