@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
         - name: django
-          image: jimoh1990/gridops:v3
+          image: jimoh1990/gridops:v4
           ports:
             - containerPort: 8000
           env:
