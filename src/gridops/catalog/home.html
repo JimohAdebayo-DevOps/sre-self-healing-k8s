@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sikiru GridOps Portal</title>
+    <style>
+        /* Basic Styling to look like a modern IDP */
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            background-color: #f4f7f6; 
+            margin: 0; 
+            padding: 20px; 
+        }
+        
+        /* Header Section */
+        .header { 
+            background-color: #ffffff; 
+            padding: 20px; 
+            border-radius: 8px; 
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1); 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            margin-bottom: 30px; 
+        }
+        
+        .header h1 { margin: 0; color: #333; }
+        
+        .user-info { font-size: 14px; color: #666; }
+        
+        /* Grid Layout for the Catalog Cards */
+        .grid { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); 
+            gap: 25px; 
+        }
+        
+        /* The Card Design */
+        .card { 
+            background: white; 
+            padding: 25px; 
+            border-radius: 12px; 
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05); 
+            transition: transform 0.2s; 
+            border: 1px solid #e0e0e0;
+        }
+        
+        .card:hover { transform: translateY(-5px); box-shadow: 0 8px 15px rgba(0,0,0,0.1); }
+        
+        .card h3 { margin-top: 0; color: #2c3e50; }
+        
+        .card p { color: #7f8c8d; line-height: 1.5; font-size: 14px; }
+        
+        .repo-link { 
+            display: block; 
+            margin: 15px 0; 
+            font-size: 12px; 
+            color: #bdc3c7; 
+            text-overflow: ellipsis; 
+            overflow: hidden; 
+            white-space: nowrap; 
+        }
+        
+        /* The Launch Button */
+        .btn { 
+            background-color: #3498db; 
+            color: white; 
+            padding: 10px 20px; 
+            text-decoration: none; 
+            border-radius: 6px; 
+            display: inline-block; 
+            font-weight: bold; 
+            width: 100%; 
+            text-align: center; 
+            box-sizing: border-box; 
+        }
+        
+        .btn:hover { background-color: #2980b9; }
+    </style>
+</head>
+<body>
+
+    <!-- Top Bar: Shows who is logged in -->
+    <div class="header">
+        <div>
+            <h1>🛠️ Service Catalog</h1>
+            <p style="margin:5px 0 0 0; color:#777;">Select a template to provision infrastructure</p>
+        </div>
+        <div class="user-info">
+            Logged in as: <strong>{{ user.email }}</strong>
+            
+            <!-- Link to Admin Panel (Only visible to Superusers) -->
+            {% if user.is_superuser %}
+                <span style="margin: 0 10px;">|</span>
+                <a href="/admin" style="color: #e74c3c; text-decoration: none; font-weight: bold;">⚙️ Manage Catalog</a>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- The Grid of Templates -->
+    <div class="grid">
+        {% for service in services %}
+        <div class="card">
+            <h3>{{ service.name }}</h3>
+            <p>{{ service.description }}</p>
+            
+            <div class="repo-link">
+                🔗 Source: {{ service.skeleton_repo_url }}
+            </div>
+            
+            <!-- This button will eventually trigger the PyGithub automation -->
+            <a href="#" class="btn">🚀 Launch Service</a>
+        </div>
+        {% empty %}
+        <!-- Empty State if no templates exist -->
+        <div style="grid-column: 1 / -1; text-align: center; padding: 50px;">
+            <h3>No templates found.</h3>
+            <p>Please ask an administrator to add Service Templates in the Admin Panel.</p>
+        </div>
+        {% endfor %}
+    </div>
+
+</body>
+</html>

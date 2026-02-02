@@ -1,6 +1,7 @@
 from django.contrib import admin
 from django.urls import path, include
 from django.http import HttpResponse
+from catalog import views as catalog_views # Import the new view
 
 # A temporary "Home" view to verify SSO works
 def home(request):
@@ -14,6 +15,6 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     # This enables the /oidc/authenticate/ endpoint
     path('oidc/', include('mozilla_django_oidc.urls')),
-    # This replaces the "Rocket" page with our logic
-    path('', home),
+    # The New Homepage (Catalog)
+    path('', catalog_views.catalog_home, name='home'),
 ]
