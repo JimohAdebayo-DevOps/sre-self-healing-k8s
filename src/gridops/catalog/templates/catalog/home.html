@@ -110,7 +110,7 @@
             </div>
             
             <!-- This button will eventually trigger the PyGithub automation -->
-            <a href="#" class="btn">🚀 Launch Service</a>
+            <a href="{% url 'launch_service' service.id %}" class="btn">🚀 Launch Service</a>
         </div>
         {% empty %}
         <!-- Empty State if no templates exist -->

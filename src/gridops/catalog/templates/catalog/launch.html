@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Launch Service</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background-color: #f4f7f6; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .container { background: white; padding: 40px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 100%; max-width: 400px; text-align: center; }
+        h2 { color: #333; margin-bottom: 10px; }
+        p { color: #666; font-size: 14px; margin-bottom: 20px; }
+        
+        /* Form Styling */
+        form { text-align: left; }
+        label { font-weight: bold; display: block; margin-bottom: 5px; color: #333; }
+        input[type="text"] { width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box; }
+        .helptext { font-size: 12px; color: #999; display: block; margin-bottom: 20px; }
+        
+        /* Buttons */
+        button { background-color: #28a745; color: white; padding: 12px; border: none; border-radius: 5px; width: 100%; cursor: pointer; font-size: 16px; font-weight: bold; }
+        button:hover { background-color: #218838; }
+        .cancel { display: block; margin-top: 15px; color: #999; text-decoration: none; font-size: 14px; text-align: center; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>🚀 Launch {{ template.name }}</h2>
+    <p>You are about to provision a new service based on the <strong>{{ template.name }}</strong> architecture.</p>
+
+    <form method="post">
+        {% csrf_token %}
+        
+        <!-- Render the Service Name field manually for better styling -->
+        <label for="{{ form.service_name.id_for_label }}">Service Name:</label>
+        {{ form.service_name }}
+        <span class="helptext">{{ form.service_name.help_text }}</span>
+        
+        <!-- Display errors if the name is invalid -->
+        {% if form.service_name.errors %}
+            <div style="color: red; font-size: 12px; margin-bottom: 10px;">
+                {{ form.service_name.errors }}
+            </div>
+        {% endif %}
+
+        <button type="submit">Confirm & Provision</button>
+    </form>
+    
+    <a href="/" class="cancel">Cancel</a>
+</div>
+
+</body>
+</html>

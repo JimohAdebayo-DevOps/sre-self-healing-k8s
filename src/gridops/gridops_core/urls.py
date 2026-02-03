@@ -15,6 +15,6 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     # This enables the /oidc/authenticate/ endpoint
     path('oidc/', include('mozilla_django_oidc.urls')),
-    # The New Homepage (Catalog)
-    path('', catalog_views.catalog_home, name='home'),
+    # Point the root URL to catalog app's URLs
+    path('', include('catalog.urls')),
 ]
