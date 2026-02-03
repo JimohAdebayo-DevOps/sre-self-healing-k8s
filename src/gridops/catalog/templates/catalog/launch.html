@@ -26,6 +26,11 @@
 <div class="container">
     <h2>🚀 Launch {{ template.name }}</h2>
     <p>You are about to provision a new service based on the <strong>{{ template.name }}</strong> architecture.</p>
+    {% if error %}
+    <div style="background-color: #f8d7da; color: #721c24; padding: 15px; border-radius: 5px; margin-bottom: 20px; border: 1px solid #f5c6cb;">
+        <strong>System Error:</strong> {{ error }}
+    </div>
+    {% endif %}
 
     <form method="post">
         {% csrf_token %}
