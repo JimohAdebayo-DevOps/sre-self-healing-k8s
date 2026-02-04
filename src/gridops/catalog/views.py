@@ -11,6 +11,32 @@ def catalog_home(request):
     services = ServiceTemplate.objects.all()
     return render(request, 'catalog/home.html', {'services': services})
 
+# --- HELPER FUNCTION: RECURSIVE COPY ---
+# Source: Ensures the "Standardized Template" (Source [1]) is fully copied (Code + Helm Charts + CI Config)
+def copy_recursive(github_object, source_repo, target_repo, path=""):
+    """
+    Recursively copies all files from source_repo to target_repo starting at 'path'.
+    """
+    contents = source_repo.get_contents(path)
+    
+    for content_file in contents:
+        if content_file.type == "dir":
+            # If directory, recurse deeper
+            copy_recursive(github_object, source_repo, target_repo, content_file.path)
+        else:
+            # If file, create it in the new repo
+            try:
+                target_repo.create_file(
+                    path=content_file.path,
+                    message=f"init: scaffold {content_file.path}",
+                    content=content_file.decoded_content
+                )
+                # Sleep to prevent hitting GitHub API rate limits (Secondary Source [3]: API limits)
+                time.sleep(0.2) 
+            except GithubException:
+                # File already exists, skip
+                pass
+
 @login_required
 def launch_service(request, template_id):
     template = get_object_or_404(ServiceTemplate, pk=template_id)
@@ -21,20 +47,21 @@ def launch_service(request, template_id):
             service_name = form.cleaned_data['service_name']
             
             try:
-                # 1. Authenticate
+                # 1. Authenticate with GitHub
                 token = os.getenv('GITHUB_TOKEN')
                 if not token:
                     raise Exception("GITHUB_TOKEN is missing.")
                 g = Github(token)
                 user = g.get_user()
                 
-                # --- STEP A: SCAFFOLDING (Create the User's Repo) ---
-                # Create a NEW repository for this specific service
-                # Create a new app repo
+                # =========================================================
+                # PART 1: SCAFFOLDING (CREATE NEW REPO)
+                # "create a new app repo" for self-service
+                # =========================================================
                 new_repo_name = f"{service_name}-source"
                 
                 try:
-                    # Create the repo (private by default, can be change if needed)
+                    # Create private repo
                     source_repo = user.create_repo(new_repo_name, private=True, auto_init=True)
                 except GithubException as e:
                     if e.status == 422: # Already exists
@@ -42,25 +69,29 @@ def launch_service(request, template_id):
                     else:
                         raise e
 
-                # Copy 'Jenkinsfile' from Skeleton to New Repo
-                # (In a real production app, we would copy ALL files recursively)
+                # =========================================================
+                # PART 2: POPULATE REPO (RECURSIVE COPY)
+                # Source [4]: Copies Jenkinsfile (CI), Dockerfile, and Charts
+                # =========================================================
+                # Note: Use skeleton name directly, or template.skeleton_repo_url can be use if parsed
                 skeleton = g.get_repo("JimohAdebayo-DevOps/gridops-skeleton-python")
                 
-                files_to_copy = ["Jenkinsfile", "Dockerfile"]
-                for filename in files_to_copy:
-                    try:
-                        content = skeleton.get_contents(filename)
-                        source_repo.create_file(filename, f"init: {filename}", content.decoded_content)
-                    except:
-                        pass # Skip if file missing in skeleton or exists in target
+                try:
+                    # Start recursive copy from the root of the skeleton
+                    copy_recursive(g, skeleton, source_repo, "")
+                except Exception as e:
+                    print(f"Scaffolding error during copy: {e}")
 
-                # --- STEP B: GITOPS (Connect Argo CD) ---
+                # =========================================================
+                # PART 3: GITOPS HANDOFF (ARGO CD MANIFEST)
                 # Cluster state is wholly determined by version-controlled manifests
+                # =========================================================
                 cluster_repo = user.get_repo("gridops-cluster-state")
                 
-                # Point Argo CD to the NEW repo just created, not the skeleton
+                # CRITICAL: Point Argo CD to the NEW user repository
                 target_repo_url = source_repo.clone_url
                 
+                # Define the Argo CD Application
                 file_content = f"""
 apiVersion: argoproj.io/v1alpha1
 kind: Application
@@ -70,11 +101,9 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: {template.skeleton_repo_url} 
-    # NOTE: In Phase 3, we will switch this to 'target_repo_url' 
-    # For now, keep pointing to skeleton until Jenkins is fully active to build images.
+    repoURL: {target_repo_url}
     targetRevision: HEAD
-    path: {template.default_chart_path}
+    path: charts/python-app  # <--- MUST MATCH the folder structure in your Skeleton
   destination:
     server: https://kubernetes.default.svc
     namespace: {service_name}
@@ -83,17 +112,17 @@ spec:
       prune: true
       selfHeal: true
     syncOptions:
-      - CreateNamespace=true
+      - CreateNamespace=true  # Source [5]: Namespace isolation
 """
                 
-                # Create the manifest
+                # Commit the manifest to the Cluster State Repo
                 cluster_repo.create_file(
                     path=f"apps/{service_name}.yaml",
-                    message=f"feat: provision {service_name}",
+                    message=f"feat: provision {service_name} via portal",
                     content=file_content
                 )
                 
-                # Record in DB
+                # 4. Record Success in Database
                 DeployedService.objects.create(
                     owner=request.user,
                     name=service_name,
@@ -108,14 +137,15 @@ spec:
                 })
 
             except Exception as e:
+                # Error Handling
                 return render(request, 'catalog/launch.html', {
                     'form': form, 
                     'template': template, 
-                    'error': f"Scaffolding Failed: {str(e)}"
+                    'error': f"Launch Failed: {str(e)}"
                 })
             
     else:
         form = ServiceForm()
 
     return render(request, 'catalog/launch.html', {'form': form, 'template': template})
-
+🚀 Next Steps (How to Apply This)
