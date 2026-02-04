@@ -1,6 +1,7 @@
 import os
-from github import Github  # The PyGithub library installed
-from django.shortcuts import render, redirect, get_object_or_404
+import time
+from github import Github, GithubException
+from django.shortcuts import render, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from .models import ServiceTemplate, DeployedService
 from .forms import ServiceForm
@@ -19,22 +20,47 @@ def launch_service(request, template_id):
         if form.is_valid():
             service_name = form.cleaned_data['service_name']
             
-            # --- GITOPS MAGIC STARTS HERE ---
             try:
-                # 1. Authenticate to GitHub
+                # 1. Authenticate
                 token = os.getenv('GITHUB_TOKEN')
                 if not token:
-                    raise Exception("GITHUB_TOKEN not found in environment")
-                
+                    raise Exception("GITHUB_TOKEN is missing.")
                 g = Github(token)
                 user = g.get_user()
                 
-                # 2. Get the Cluster State Repo
-                repo_name = "JimohAdebayo-DevOps/gridops-cluster-state"
-                repo = g.get_repo(repo_name)
+                # --- STEP A: SCAFFOLDING (Create the User's Repo) ---
+                # Create a NEW repository for this specific service
+                # Create a new app repo
+                new_repo_name = f"{service_name}-source"
                 
-                # 3. Create the Content (The Argo CD Application Manifest)
-                # "The cluster state is wholly determined by manifests"
+                try:
+                    # Create the repo (private by default, can be change if needed)
+                    source_repo = user.create_repo(new_repo_name, private=True, auto_init=True)
+                except GithubException as e:
+                    if e.status == 422: # Already exists
+                        source_repo = user.get_repo(new_repo_name)
+                    else:
+                        raise e
+
+                # Copy 'Jenkinsfile' from Skeleton to New Repo
+                # (In a real production app, we would copy ALL files recursively)
+                skeleton = g.get_repo("JimohAdebayo-DevOps/gridops-skeleton-python")
+                
+                files_to_copy = ["Jenkinsfile", "Dockerfile"]
+                for filename in files_to_copy:
+                    try:
+                        content = skeleton.get_contents(filename)
+                        source_repo.create_file(filename, f"init: {filename}", content.decoded_content)
+                    except:
+                        pass # Skip if file missing in skeleton or exists in target
+
+                # --- STEP B: GITOPS (Connect Argo CD) ---
+                # Cluster state is wholly determined by version-controlled manifests
+                cluster_repo = user.get_repo("gridops-cluster-state")
+                
+                # Point Argo CD to the NEW repo just created, not the skeleton
+                target_repo_url = source_repo.clone_url
+                
                 file_content = f"""
 apiVersion: argoproj.io/v1alpha1
 kind: Application
@@ -44,7 +70,9 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: {template.skeleton_repo_url}
+    repoURL: {template.skeleton_repo_url} 
+    # NOTE: In Phase 3, we will switch this to 'target_repo_url' 
+    # For now, keep pointing to skeleton until Jenkins is fully active to build images.
     targetRevision: HEAD
     path: {template.default_chart_path}
   destination:
@@ -54,23 +82,24 @@ spec:
     automated:
       prune: true
       selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
 """
                 
-                # 4. Commit the file to GitHub
-                # This triggers the "GitOps" workflow
-                repo.create_file(
+                # Create the manifest
+                cluster_repo.create_file(
                     path=f"apps/{service_name}.yaml",
-                    message=f"feat: provision {service_name} via portal",
+                    message=f"feat: provision {service_name}",
                     content=file_content
                 )
                 
-                # 5. Save record in the local database
+                # Record in DB
                 DeployedService.objects.create(
                     owner=request.user,
                     name=service_name,
                     template=template,
                     namespace=service_name,
-                    github_repo_url=repo.html_url
+                    github_repo_url=source_repo.html_url
                 )
 
                 return render(request, 'catalog/success_launch.html', {
@@ -79,15 +108,14 @@ spec:
                 })
 
             except Exception as e:
-                # If GitHub fails, show error
                 return render(request, 'catalog/launch.html', {
                     'form': form, 
-                    'template': template,
-                    'error': f"GitOps Failed: {str(e)}"
+                    'template': template, 
+                    'error': f"Scaffolding Failed: {str(e)}"
                 })
-            # --- GITOPS MAGIC ENDS HERE ---
             
     else:
         form = ServiceForm()
 
     return render(request, 'catalog/launch.html', {'form': form, 'template': template})
+
