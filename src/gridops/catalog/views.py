@@ -148,4 +148,3 @@ spec:
         form = ServiceForm()
 
     return render(request, 'catalog/launch.html', {'form': form, 'template': template})
-🚀 Next Steps (How to Apply This)
