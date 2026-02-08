@@ -156,6 +156,7 @@ OIDC_OP_USER_ENDPOINT = "https://sso.sikiru.co.uk/realms/Sikiru-Lab/protocol/ope
 OIDC_OP_JWKS_ENDPOINT = "https://sso.sikiru.co.uk/realms/Sikiru-Lab/protocol/openid-connect/certs"
 
 # 5. Redirect Behavior
+LOGIN_URL = "/oidc/authenticate/"
 LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = '/'
 # SECURITY: Trust the 'X-Forwarded-Proto' header coming from Cloudflare/Ingress
