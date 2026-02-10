@@ -1,10 +1,12 @@
 import os
+import base64
 import time
 from github import Github, GithubException
 from django.shortcuts import render, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from .models import ServiceTemplate, DeployedService
 from .forms import ServiceForm
+from kubernetes import client, config
 
 @login_required
 def catalog_home(request):
@@ -36,6 +38,59 @@ def copy_recursive(github_object, source_repo, target_repo, path=""):
             except GithubException:
                 # File already exists, skip
                 pass
+
+# NEW IMPORTS FOR KUBERNETES
+from kubernetes import client, config
+
+# --- HELPER: AUTOMATED SECRET CREATION ---
+def create_argocd_secret(repo_url, repo_name):
+    """
+    Creates a Kubernetes Secret in the 'argocd' namespace so Argo CD
+    can access the newly created private repository.
+    """
+    try:
+        # Load authentication (works automatically inside the cluster)
+        try:
+            config.load_incluster_config()
+        except config.ConfigException:
+            # Fallback for local testing (uses ~/.kube/config)
+            config.load_kube_config()
+
+        v1 = client.CoreV1Api()
+        
+        # To Get the token Django is using (The one injected via Envs)
+        github_token = os.getenv('GITHUB_TOKEN')
+        
+        # To Define the Secret Name (Sanitized)
+        secret_name = f"repo-{repo_name}"
+        
+        # To Create the Secret Object
+        secret = client.V1Secret(
+            metadata=client.V1ObjectMeta(
+                name=secret_name,
+                namespace="argocd",
+                labels={"argocd.argoproj.io/secret-type": "repository"} # Critical Label
+            ),
+            string_data={
+                "url": repo_url,
+                "type": "git",
+                "username": "git",
+                "password": github_token
+            },
+            type="Opaque"
+        )
+
+        # To Send to Kubernetes API
+        v1.create_namespaced_secret(namespace="argocd", body=secret)
+        print(f"✅ Successfully created Argo CD secret: {secret_name}")
+        return True
+
+    except Exception as e:
+        print(f"❌ Failed to create Kubernetes Secret: {e}")
+        # In production, this might be log or meant to throw an error,
+        # but for now just to print it so the view doesn't crash.
+        return False
+
 
 @login_required
 def launch_service(request, template_id):

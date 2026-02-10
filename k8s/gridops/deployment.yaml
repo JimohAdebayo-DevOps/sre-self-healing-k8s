@@ -15,9 +15,10 @@ spec:
       labels:
         app: gridops
     spec:
+      serviceAccountName: gridops-portal-sa
       containers:
         - name: django
-          image: jimoh1990/gridops:v20
+          image: jimoh1990/gridops:v21
           ports:
             - containerPort: 8000
           env:

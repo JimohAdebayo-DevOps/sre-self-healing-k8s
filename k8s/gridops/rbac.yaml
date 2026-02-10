@@ -1,0 +1,34 @@
+# 1. Dedicated Identity for the Portal (Least Privilege)
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: gridops-portal-sa
+  namespace: n8n
+
+---
+# 2. Permission to Manage Secrets (The "Keys to the Kingdom")
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  namespace: argocd   # Role exists where the target is (ArgoCD)
+  name: gridops-secret-manager
+rules:
+  - apiGroups: [""]
+    resources: ["secrets"]
+    verbs: ["create", "get", "patch", "delete"]
+
+---
+# 3. Binding the Identity to the Permission
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: gridops-secret-binding
+  namespace: argocd
+subjects:
+  - kind: ServiceAccount
+    name: gridops-portal-sa # <--- Only THIS specific account gets the power
+    namespace: n8n           # <--- This is where the Django pod lives
+roleRef:
+  kind: Role
+  name: gridops-secret-manager
+  apiGroup: rbac.authorization.k8s.io

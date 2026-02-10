@@ -1,0 +1,1896 @@
+This file is a merged representation of a subset of the codebase, containing specifically included files and files not matching ignore patterns, combined into a single document by Repomix.
+The content has been processed where content has been compressed (code blocks are separated by ⋮---- delimiter).
+
+<file_summary>
+This section contains a summary of this file.
+
+<purpose>
+This file contains a packed representation of a subset of the repository's contents that is considered the most important context.
+It is designed to be easily consumable by AI systems for analysis, code review,
+or other automated processes.
+</purpose>
+
+<file_format>
+The content is organized as follows:
+1. This summary section
+2. Repository information
+3. Directory structure
+4. Repository files (if enabled)
+5. Multiple file entries, each consisting of:
+  - File path as an attribute
+  - Full contents of the file
+</file_format>
+
+<usage_guidelines>
+- This file should be treated as read-only. Any changes should be made to the
+  original repository files, not this packed version.
+- When processing this file, use the file path to distinguish
+  between different files in the repository.
+- Be aware that this file may contain sensitive information. Handle it with
+  the same level of security as you would the original repository.
+</usage_guidelines>
+
+<notes>
+- Some files may have been excluded based on .gitignore rules and Repomix's configuration
+- Binary files are not included in this packed representation. Please refer to the Repository Structure section for a complete list of file paths, including binary files
+- Only files matching these patterns are included: **/*.py, **/*.yaml, **/*.yml, **/*.sh, Dockerfile*, Chart.yaml
+- Files matching these patterns are excluded: **/migrations/**, **/venv/**, **/node_modules/**, **/*.pyc, db.sqlite3, .git/**
+- Files matching patterns in .gitignore are excluded
+- Files matching default ignore patterns are excluded
+- Content has been compressed - code blocks are separated by ⋮---- delimiter
+- Files are sorted by Git change count (files with more changes are at the bottom)
+</notes>
+
+</file_summary>
+
+<directory_structure>
+argocd/
+  argocd-config-launcher.yaml
+  argocd-values.yaml
+  bootstrap-root-app.yaml
+  cert-manager-app-launcher.yaml
+  cert-manager-config-launcher.yaml
+  cloudflare-app-launcher.yaml
+  gridops-app.yaml
+  ingress-nginx-app-launcher.yaml
+  jenkins-app.yaml
+  keycloak-app.yaml
+  logging-stack.yaml
+  longhorn-app-launcher.yaml
+  metallb-app-launcher.yaml
+  monitoring-stack.yaml
+  n8n-app-launcher.yaml
+  oauth2-proxy-app.yaml
+  postgresql-app.yaml
+  raid-exporter-app-launcher.yaml
+k8s/
+  argocd/
+    ingress.yaml
+  cert-manager-config/
+    ca_letsencrypt_real_production.yaml
+    ca_selfsigned_internal.yaml
+    clusterissuer-cloudflare.yaml
+  cloudflare/
+    cloudflare-tunnel.yaml
+  gridops/
+    deployment.yaml
+    ingress.yaml
+    service.yaml
+  jenkins/
+    values.yaml
+  keycloak/
+    values.yaml
+  logging/
+    values.yaml
+  longhorn/
+    longhorn-ingress.yaml
+  metallb/
+    config.yaml
+  monitoring/
+    ingress.yaml
+  n8n/
+    backup-storage.yaml
+    n8n-backup-job.yaml
+    n8n-data-rwx.yaml
+    n8n-deployment.yaml
+    n8n-ingress.yaml
+    n8n-service.yaml
+    postgres-values.yaml
+  oauth2-proxy/
+    values.yaml
+  deployment.yaml
+  monitoring-stack.yaml
+  service-monitor.yaml
+src/
+  gridops/
+    catalog/
+      __init__.py
+      admin.py
+      apps.py
+      forms.py
+      models.py
+      urls.py
+      views.py
+    gridops_core/
+      __init__.py
+      asgi.py
+      settings.py
+      urls.py
+      wsgi.py
+    manage.py
+  exporter.py
+</directory_structure>
+
+<files>
+This section contains the contents of the repository's files.
+
+<file path="argocd/argocd-config-launcher.yaml">
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: argocd-config
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "5" # Set to high so it's the last thing to sync
+spec:
+  project: default
+  source:
+    repoURL: 'https://github.com/JimohAdebayo-DevOps/sre-self-healing-k8s.git'
+    path: k8s/argocd
+    targetRevision: main
+  destination:
+    server: 'https://kubernetes.default.svc'
+    namespace: argocd
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+</file>
+
+<file path="argocd/bootstrap-root-app.yaml">
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: gridops-root-app
+  namespace: argocd
+spec:
+  project: default
+  source:
+    # This is the repo where Django is pushing files
+    repoURL: https://github.com/JimohAdebayo-DevOps/gridops-cluster-state.git
+    targetRevision: HEAD
+    path: apps  # <--- Argo will look inside this folder
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: argocd
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+</file>
+
+<file path="argocd/gridops-app.yaml">
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: gridops-portal
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+  labels:
+    component: internal-developer-platform
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/JimohAdebayo-DevOps/sre-self-healing-k8s.git
+    targetRevision: main
+    path: k8s/gridops
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: n8n
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+</file>
+
+<file path="argocd/jenkins-app.yaml">
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: jenkins
+  namespace: argocd
+spec:
+  project: default
+  sources:
+    - repoURL: 'https://charts.jenkins.io'
+      chart: jenkins
+      targetRevision: 5.1.5
+      helm:
+        valueFiles:
+          - $values/k8s/jenkins/values.yaml
+    - repoURL: 'https://github.com/JimohAdebayo-DevOps/sre-self-healing-k8s.git'
+      targetRevision: main
+      ref: values
+  destination:
+    server: 'https://kubernetes.default.svc'
+    namespace: jenkins
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+</file>
+
+<file path="argocd/logging-stack.yaml">
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: logging-stack
+  namespace: argocd
+  annotations:
+    # Wave 4: Starts alongside n8n/Monitoring
+    argocd.argoproj.io/sync-wave: "4"
+spec:
+  project: default
+  sources:
+    # SOURCE 1: The Official Software
+    - repoURL: https://grafana.github.io/helm-charts
+      chart: loki-stack
+      targetRevision: 2.10.2
+      helm:
+        valueFiles:
+          # This variable ($values) refers to Source 2 below
+          - $values/k8s/logging/values.yaml
+
+    # SOURCE 2: Configuration (Values File)
+    - repoURL: https://github.com/JimohAdebayo-DevOps/sre-self-healing-k8s.git
+      targetRevision: main
+      ref: values # This creates the reference used above
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: logging
+  
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+</file>
+
+<file path="argocd/oauth2-proxy-app.yaml">
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: oauth2-proxy
+  namespace: argocd
+spec:
+  project: default
+  sources:
+    - repoURL: https://oauth2-proxy.github.io/manifests
+      chart: oauth2-proxy
+      targetRevision: 7.12.6 # Standard stable version
+      helm:
+        valueFiles:
+          - $values/k8s/oauth2-proxy/values.yaml
+    - repoURL: https://github.com/JimohAdebayo-DevOps/sre-self-healing-k8s.git
+      targetRevision: main
+      ref: values
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: oauth2-proxy
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+</file>
+
+<file path="k8s/argocd/ingress.yaml">
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    nginx.ingress.kubernetes.io/backend-protocol: HTTP
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "false"
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+  labels:
+    app.kubernetes.io/component: server
+    app.kubernetes.io/instance: argocd
+    app.kubernetes.io/name: argocd-server
+    app.kubernetes.io/part-of: argocd
+    app.kubernetes.io/version: v3.2.5
+  name: argocd-server
+  namespace: argocd
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: argocd.sikiru.co.uk
+    http:
+      paths:
+      - backend:
+          service:
+            name: argocd-server
+            port:
+              number: 80
+        path: /
+        pathType: Prefix
+</file>
+
+<file path="k8s/cert-manager-config/ca_letsencrypt_real_production.yaml">
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: letsencrypt-prod
+spec:
+  acme:
+    # Let's Encrypt production server
+    server: https://acme-v02.api.letsencrypt.org/directory
+    # Email for certificate expiry notifications
+    email: jimohsikiru5@gmail.com 
+    privateKeySecretRef:
+      name: letsencrypt-prod-key
+    solvers:
+    - http01:
+        ingress:
+          class: nginx
+</file>
+
+<file path="k8s/cert-manager-config/ca_selfsigned_internal.yaml">
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: selfsigned-cluster-issuer
+spec:
+  selfSigned: {}
+</file>
+
+<file path="k8s/cert-manager-config/clusterissuer-cloudflare.yaml">
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: letsencrypt-cloudflare
+spec:
+  acme:
+    email: jimohsikiru5@gmail.com.com
+    server: https://acme-v02.api.letsencrypt.org/directory
+    privateKeySecretRef:
+      name: letsencrypt-cloudflare-key
+    solvers:
+    - dns01:
+        cloudflare:
+          apiTokenSecretRef:
+            name: cloudflare-api-token
+            key: api-token
+</file>
+
+<file path="k8s/cloudflare/cloudflare-tunnel.yaml">
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cloudflared
+  namespace: n8n
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cloudflared
+  template:
+    metadata:
+      labels:
+        app: cloudflared
+    spec:
+      containers:
+      - name: cloudflared
+        image: cloudflare/cloudflared:latest
+        args: [ "tunnel", "--no-autoupdate", "run" ]
+        env:
+        - name: TUNNEL_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: cloudflare-tunnel-token
+              key: token
+</file>
+
+<file path="k8s/gridops/service.yaml">
+apiVersion: v1
+kind: Service
+metadata:
+  name: gridops-service
+  namespace: n8n
+spec:
+  selector:
+    app: gridops
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8000
+</file>
+
+<file path="k8s/metallb/config.yaml">
+apiVersion: metallb.io/v1beta1
+kind: IPAddressPool
+metadata:
+  name: default-pool
+  namespace: metallb-system
+spec:
+  addresses:
+  - 192.168.0.200-192.168.0.220
+---
+apiVersion: metallb.io/v1beta1
+kind: L2Advertisement
+metadata:
+  name: l2
+  namespace: metallb-system
+</file>
+
+<file path="k8s/monitoring/ingress.yaml">
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: monitoring-stack-grafana
+  namespace: monitoring
+  annotations:
+    nginx.ingress.kubernetes.io/backend-protocol: HTTP
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "false"
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+  labels:
+    app.kubernetes.io/instance: monitoring-stack
+    app.kubernetes.io/name: grafana
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: grafana.sikiru.co.uk
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: monitoring-stack-grafana
+            port:
+              number: 80
+</file>
+
+<file path="k8s/n8n/n8n-data-rwx.yaml">
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: n8n-data
+  namespace: n8n
+spec:
+  accessModes:
+    - ReadWriteMany  # Changed to RWX
+  resources:
+    requests:
+      storage: 10Gi
+  storageClassName: longhorn
+</file>
+
+<file path="k8s/n8n/n8n-service.yaml">
+apiVersion: v1
+kind: Service
+metadata:
+  name: n8n
+  namespace: n8n
+spec:
+  selector:
+    app: n8n
+  ports:
+    - port: 80
+      targetPort: 5678
+</file>
+
+<file path="k8s/n8n/postgres-values.yaml">
+USER-SUPPLIED VALUES:
+auth:
+  enabled: true
+global:
+  postgresql:
+    auth:
+      existingSecret: postgres-credentials
+primary:
+  persistence:
+    size: 10Gi
+    storageClass: longhorn
+  resources:
+    limits:
+      memory: 1Gi
+    requests:
+      memory: 512Mi
+</file>
+
+<file path="k8s/deployment.yaml">
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: raid-exporter
+  namespace: monitoring
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: raid-exporter
+  template:
+    metadata:
+      labels:
+        app: raid-exporter
+    spec:
+      containers:
+      - name: exporter
+        image: jimoh1990/raid-exporter:v1 # We will build this next
+        ports:
+        - containerPort: 8000
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: raid-exporter-service
+  namespace: monitoring
+  labels:
+    app: raid-exporter
+spec:
+  selector:
+    app: raid-exporter
+  ports:
+    - name: web
+      protocol: TCP
+      port: 80
+      targetPort: 8000
+</file>
+
+<file path="k8s/monitoring-stack.yaml">
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: monitoring-stack
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: 'https://prometheus-community.github.io/helm-charts'
+    targetRevision: 67.9.0
+    chart: kube-prometheus-stack
+    helm:
+      values: |
+        grafana:
+          admin:
+            existingSecret: "grafana-admin-credentials"
+            userKey: admin-user
+            passwordKey: admin-password
+          ingress:
+            enabled: true
+            ingressClassName: nginx
+            annotations:
+              nginx.ingress.kubernetes.io/ssl-redirect: "false"
+              nginx.ingress.kubernetes.io/force-ssl-redirect: "false"
+              nginx.ingress.kubernetes.io/backend-protocol: "HTTP"
+            hosts:
+              - grafana.sikiru.co.uk
+  destination:
+    server: 'https://kubernetes.default.svc'
+    namespace: monitoring
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true # CRITICAL: Moves logic to API server to bypass size limits
+      - RespectIgnoreDifferences=true
+  ignoreDifferences:
+    - group: apiextensions.k8s.io
+      kind: CustomResourceDefinition
+      jsonPointers:
+        - /metadata/annotations/kubectl.kubernetes.io~1last-applied-configuration
+</file>
+
+<file path="k8s/service-monitor.yaml">
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: raid-exporter-monitor
+  namespace: monitoring # Keep it with the stack
+  labels:
+    # This label is CRITICAL. The monitoring-stack is configured
+    # to look for ServiceMonitors with this specific label.
+    release: monitoring-stack 
+spec:
+  selector:
+    matchLabels:
+      app: raid-exporter # Must match the label on your RAID Exporter Service
+  namespaceSelector:
+    matchNames:
+      - monitoring # The namespace where your Python app is running
+  endpoints:
+  - port: web # Or the name of the port in your Service definition
+    interval: 15s
+    path: /metrics
+</file>
+
+<file path="src/gridops/catalog/__init__.py">
+
+</file>
+
+<file path="src/gridops/catalog/admin.py">
+@admin.register(ServiceTemplate)
+class ServiceTemplateAdmin(admin.ModelAdmin)
+⋮----
+list_display = ('name', 'skeleton_repo_url', 'created_at')
+⋮----
+@admin.register(DeployedService)
+class DeployedServiceAdmin(admin.ModelAdmin)
+⋮----
+list_display = ('name', 'owner', 'namespace', 'created_at')
+</file>
+
+<file path="src/gridops/catalog/apps.py">
+
+</file>
+
+<file path="src/gridops/catalog/forms.py">
+class ServiceForm(forms.Form)
+⋮----
+service_name = forms.CharField(
+⋮----
+def clean_service_name(self)
+⋮----
+name = self.cleaned_data['service_name']
+# Enforce Kubernetes naming conventions (DNS-1123)
+</file>
+
+<file path="src/gridops/catalog/models.py">
+class ServiceTemplate(models.Model)
+⋮----
+name = models.CharField(max_length=100)
+description = models.TextField()
+skeleton_repo_url = models.URLField()
+default_chart_path = models.CharField(max_length=200, default="charts/python-app")
+created_at = models.DateTimeField(auto_now_add=True)
+⋮----
+def __str__(self)
+⋮----
+class DeployedService(models.Model)
+⋮----
+owner = models.ForeignKey(User, on_delete=models.CASCADE)
+⋮----
+template = models.ForeignKey(ServiceTemplate, on_delete=models.PROTECT)
+namespace = models.CharField(max_length=100)
+github_repo_url = models.URLField(blank=True, null=True)
+</file>
+
+<file path="src/gridops/catalog/urls.py">
+urlpatterns = [
+</file>
+
+<file path="src/gridops/gridops_core/__init__.py">
+
+</file>
+
+<file path="src/gridops/gridops_core/asgi.py">
+"""
+ASGI config for gridops_core project.
+
+It exposes the ASGI callable as a module-level variable named ``application``.
+
+For more information on this file, see
+https://docs.djangoproject.com/en/5.2/howto/deployment/asgi/
+"""
+⋮----
+application = get_asgi_application()
+</file>
+
+<file path="src/gridops/gridops_core/wsgi.py">
+"""
+WSGI config for gridops_core project.
+
+It exposes the WSGI callable as a module-level variable named ``application``.
+
+For more information on this file, see
+https://docs.djangoproject.com/en/5.2/howto/deployment/wsgi/
+"""
+⋮----
+application = get_wsgi_application()
+</file>
+
+<file path="src/gridops/manage.py">
+#!/usr/bin/env python
+"""Django's command-line utility for administrative tasks."""
+⋮----
+def main()
+⋮----
+"""Run administrative tasks."""
+</file>
+
+<file path="src/exporter.py">
+# Define the metric: 1 is Healthy, 0 is Failed
+# This is the name you will search for in Grafana
+raid_status_metric = Gauge('node_raid_status', 'Health status of the RAID array (1=OK, 0=FAIL)')
+⋮----
+def check_raid_logic()
+⋮----
+"""
+    SRE Simulation: 95% chance the RAID is healthy.
+    In production, this would be a subprocess call to 'mdadm'.
+    """
+⋮----
+# Start the Prometheus exporter server on port 8000
+⋮----
+# Infinite loop to update the metric
+⋮----
+status = check_raid_logic()
+⋮----
+# Log to terminal for debugging
+state = "HEALTHY" if status == 1 else "FAILED"
+⋮----
+# Wait 15 seconds before the next check
+</file>
+
+<file path="argocd/argocd-values.yaml">
+global:
+  domain: argocd.sikiru.co.uk
+
+configs:
+  params:
+    server.insecure: "true" # Fixes the 404/Redirect loop
+  cm:
+    url: https://argocd.sikiru.co.uk # Sets the public identity
+    dex.config: |
+      connectors:
+        - type: github
+          id: github
+          name: GitHub
+          config:
+            clientID: $dex.github.clientID
+            clientSecret: $dex.github.clientSecret
+            orgs:
+              - name: JimohAdebayo-DevOps
+
+server:
+  insecure: true
+  extraArgs:
+    - --insecure
+
+  service:
+    type: ClusterIP
+    servicePortHttp: 80
+
+  ingress:
+    enabled: true
+    https: false # tells Ingress to use port 80
+    ingressClassName: nginx
+    annotations:
+      nginx.ingress.kubernetes.io/ssl-redirect: "false"
+      nginx.ingress.kubernetes.io/force-ssl-redirect: "false"
+      nginx.ingress.kubernetes.io/backend-protocol: "HTTP"
+    hosts:
+      - argocd.sikiru.co.uk
+    paths:
+      - /
+    pathType: Prefix
+
+redis-ha:
+  enabled: false
+</file>
+
+<file path="argocd/cert-manager-app-launcher.yaml">
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: cert-manager
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"  # Ensure it starts after storage but before apps
+spec:
+  project: default
+  source:
+    chart: cert-manager
+    repoURL: https://charts.jetstack.io
+    targetRevision: 1.14.0
+    helm:
+      parameters:
+        - name: installCRDs
+          value: "true"
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: cert-manager
+  syncPolicy:
+    automated:
+      prune: false     # Initially set to false to avoid deleting existing resources
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=false # Set to false since the namespace already exists
+      - RespectIgnoreDifferences=true
+</file>
+
+<file path="argocd/cert-manager-config-launcher.yaml">
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: cert-manager-config
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: 'https://github.com/JimohAdebayo-DevOps/sre-self-healing-k8s.git'
+    path: k8s/cert-manager-config
+    targetRevision: main
+  destination:
+    server: 'https://kubernetes.default.svc'
+    namespace: cert-manager
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+</file>
+
+<file path="argocd/cloudflare-app-launcher.yaml">
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: cloudflare-tunnel
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+spec:
+  project: default
+  source:
+    repoURL: 'https://github.com/JimohAdebayo-DevOps/sre-self-healing-k8s.git'
+    path: k8s/cloudflare
+    targetRevision: main
+  destination:
+    server: 'https://kubernetes.default.svc'
+    namespace: n8n
+  syncPolicy:
+    automated:
+      prune: false 
+      selfHeal: true
+</file>
+
+<file path="argocd/ingress-nginx-app-launcher.yaml">
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: ingress-nginx
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  project: default
+  source:
+    repoURL: https://kubernetes.github.io/ingress-nginx
+    chart: ingress-nginx
+    targetRevision: 4.11.2 # This chart version installs Controller v1.11.2
+    helm:
+      parameters:
+        - name: controller.service.type
+          value: "LoadBalancer" # This protects MetalLB connection
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: ingress-nginx
+  syncPolicy:
+    automated:
+      prune: false # CRITICAL: Prevents Argo CD from deleting existing parts
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=false
+</file>
+
+<file path="argocd/keycloak-app.yaml">
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: keycloak
+  namespace: argocd
+spec:
+  project: default
+  sources:
+    - repoURL: https://charts.bitnami.com/bitnami
+      chart: keycloak
+      targetRevision: 25.2.0
+      helm:
+        # This references the second source for values
+        valueFiles:
+          - $values/k8s/keycloak/values.yaml
+    - repoURL: https://github.com/JimohAdebayo-DevOps/sre-self-healing-k8s.git
+      targetRevision: main
+      ref: values # This 'ref' matches the '$values' variable above
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: keycloak
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+</file>
+
+<file path="argocd/longhorn-app-launcher.yaml">
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: longhorn-system
+  namespace: argocd
+spec:
+  project: default
+  source:
+    chart: longhorn
+    repoURL: https://charts.longhorn.io
+    targetRevision: 1.10.1
+    helm:
+      values: |
+        persistence:
+          defaultClass: true
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: longhorn-system
+  syncPolicy:
+    automated:
+      prune: false # Set to false initially so it doesn't delete existing volumes
+      selfHeal: true
+</file>
+
+<file path="argocd/metallb-app-launcher.yaml">
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: metallb-system
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  project: default
+  sources:
+    # SOURCE 1: The official MetalLB Installation Manifest
+    - repoURL: 'https://github.com/metallb/metallb.git'
+      path: config/manifests
+      targetRevision: v0.14.5 
+
+    - repoURL: 'https://github.com/JimohAdebayo-DevOps/sre-self-healing-k8s.git'
+      targetRevision: main
+      path: k8s/metallb # Points to config.yaml
+  destination:
+    server: 'https://kubernetes.default.svc'
+    namespace: metallb-system
+  syncPolicy:
+    automated:
+      prune: false # Safety: don't delete existing networking
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=false
+      - Validate=false # Manifests can sometimes have version-specific validation issues
+</file>
+
+<file path="argocd/n8n-app-launcher.yaml">
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: n8n-automation-hub
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: 'https://github.com/JimohAdebayo-DevOps/sre-self-healing-k8s.git'
+    targetRevision: HEAD
+    path: k8s/n8n  # Points specifically to the new n8n folder
+  destination:
+    server: 'https://kubernetes.default.svc'
+    namespace: n8n 
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+</file>
+
+<file path="argocd/raid-exporter-app-launcher.yaml">
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: raid-exporter-app
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: 'https://github.com/JimohAdebayo-DevOps/sre-self-healing-k8s.git'
+    targetRevision: HEAD
+    path: k8s # Points Argo CD to the folder where the deployment.yaml is
+  destination:
+    server: 'https://kubernetes.default.svc'
+    namespace: monitoring
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+</file>
+
+<file path="k8s/longhorn/longhorn-ingress.yaml">
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: longhorn-dashboard
+  namespace: longhorn-system
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    cert-manager.io/cluster-issuer: letsencrypt-cloudflare # Re-use n8n issuer
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"      # This is kept FALSE to avoid loops
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts:
+        - longhorn.sikiru.co.uk
+      secretName: longhorn-tls-cert
+  rules:
+    - host: longhorn.sikiru.co.uk
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: longhorn-frontend
+                port:
+                  number: 80
+</file>
+
+<file path="k8s/n8n/backup-storage.yaml">
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: local-storage
+provisioner: kubernetes.io/no-provisioner
+volumeBindingMode: WaitForFirstConsumer
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: raid5-backup-pv
+spec:
+  capacity:
+    storage: 45Gi
+  volumeMode: Filesystem
+  accessModes:
+  - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: local-storage
+  local:
+    path: /mnt/backups
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+      - matchExpressions:
+        - key: kubernetes.io/hostname
+          operator: In
+          values:
+          - k8s-worker-01
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: n8n-db-backup-pvc
+  namespace: n8n
+spec:
+  storageClassName: local-storage
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 40Gi
+</file>
+
+<file path="k8s/n8n/n8n-backup-job.yaml">
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: n8n-nightly-backup
+  namespace: n8n
+spec:
+  schedule: "0 3 * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          # This is to ensure the backup job runs on worker-01 where the RAID is
+          # AND where n8n should be to access the RWO volume
+          nodeSelector:
+            kubernetes.io/hostname: k8s-worker-01 
+          containers:
+          - name: backup-worker
+            image: postgres:15-alpine
+            env:
+            - name: PGPASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-credentials
+                  key: postgres-password
+            command:
+            - /bin/sh
+            - -c
+            - |
+              DATE=$(date +%Y-%m-%d_%H-%M)
+              DB_FILE="/backup/n8n_db_$DATE.sql.gz"
+              FS_FILE="/backup/n8n_files_$DATE.tar.gz"
+
+              echo "--- Starting Full Production Backup ---"
+
+              # 1. Database Backup
+              echo "Dumping Database..."
+              pg_dump -h n8n-postgres -U postgres n8n_db | gzip > $DB_FILE
+
+              # 2. Binary & Config Backup
+              echo "Archiving n8n Files (Binaries/Configs)..."
+              # 'c'reate 'z'ip 'f'ile
+              tar -czf $FS_FILE -C /n8n-data .
+
+              if [ $? -eq 0 ]; then
+                echo "SUCCESS: Database and Files backed up."
+                echo "Cleaning up archives older than 7 days..."
+                find /backup -type f -name "*.gz" -mtime +7 -delete
+              else
+                echo "FAILURE: Backup encountered an error."
+                exit 1
+              fi
+            volumeMounts:
+            - name: raid5-storage
+              mountPath: /backup
+            - name: n8n-longhorn-data
+              mountPath: /n8n-data
+              readOnly: true # This is for Safety so Backup should not change original files
+          restartPolicy: OnFailure
+          volumes:
+          - name: raid5-storage
+            persistentVolumeClaim:
+              claimName: n8n-db-backup-pvc
+          - name: n8n-longhorn-data
+            persistentVolumeClaim:
+              claimName: n8n-data
+</file>
+
+<file path="argocd/monitoring-stack.yaml">
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: monitoring-stack
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: 'https://prometheus-community.github.io/helm-charts'
+    targetRevision: 67.9.0
+    chart: kube-prometheus-stack
+    helm:
+      values: |
+        grafana:
+          additionalDataSources:
+            - name: Loki
+              type: loki
+              uid: loki
+              url: http://logging-stack-loki.logging.svc.cluster.local:3100
+              access: proxy
+              isDefault: false
+              jsonData:
+                derivedFields:
+                  - datasourceUid: tempo
+                    matcherRegex: "traceID=(\\w+)"
+                    name: TraceID
+                    url: "$${__value.raw}"
+          admin:
+            existingSecret: "grafana-admin-credentials"
+            userKey: admin-user
+            passwordKey: admin-password
+          ingress:
+            enabled: true
+            ingressClassName: nginx
+            annotations:
+              nginx.ingress.kubernetes.io/ssl-redirect: "false"
+              nginx.ingress.kubernetes.io/force-ssl-redirect: "false"
+              nginx.ingress.kubernetes.io/backend-protocol: "HTTP"
+            hosts:
+              - grafana.sikiru.co.uk
+            path: /
+          grafana.ini:
+            server:
+              # Tells Grafana it is being served via HTTPS by Cloudflare
+              root_url: https://grafana.sikiru.co.uk
+  destination:
+    server: 'https://kubernetes.default.svc'
+    namespace: monitoring
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+      - Replace=true
+  ignoreDifferences:
+    - group: apiextensions.k8s.io
+      kind: CustomResourceDefinition
+      jsonPointers:
+        - /metadata/annotations/kubectl.kubernetes.io~1last-applied-configuration
+</file>
+
+<file path="argocd/postgresql-app.yaml">
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: postgresql-db
+  namespace: argocd
+spec:
+  project: default
+  sources:
+    - repoURL: https://charts.bitnami.com/bitnami
+      chart: postgresql
+      targetRevision: 18.2.0
+      helm:
+        # The '$values' variable points to the second source below
+        valueFiles:
+          - $values/k8s/n8n/postgres-values.yaml 
+    - repoURL: https://github.com/JimohAdebayo-DevOps/sre-self-healing-k8s.git
+      targetRevision: main
+      ref: values  # This creates the '$values' alias used above
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: n8n
+  syncPolicy:
+    # IMPORTANT: leave automation OFF for the very first sync
+    # to ensure it doesn't try to "re-install" over your live data.
+    syncOptions:
+      - CreateNamespace=true
+</file>
+
+<file path="k8s/n8n/n8n-ingress.yaml">
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: n8n
+  namespace: n8n
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-cloudflare
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+
+    # AUTHENTICATION HANDSHAKE
+    nginx.ingress.kubernetes.io/auth-url: "http://oauth2-proxy.oauth2-proxy.svc.cluster.local:80/oauth2/auth"
+    nginx.ingress.kubernetes.io/auth-signin: "https://oauth2.sikiru.co.uk/oauth2/start?rd=$scheme://$host$request_uri"
+    nginx.ingress.kubernetes.io/auth-response-headers: "X-Auth-Request-User,X-Auth-Request-Email,Authorization"
+
+    # THE 501 ERROR FIX (Native & Safe)
+    nginx.ingress.kubernetes.io/auth-method: GET
+    nginx.ingress.kubernetes.io/proxy-buffer-size: "16k"
+    nginx.ingress.kubernetes.io/proxy-buffers-number: "4"
+    nginx.ingress.kubernetes.io/large-client-header-buffers: "4 16k"
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts:
+        - n8n.sikiru.co.uk
+      secretName: n8n-tls3
+  rules:
+    - host: n8n.sikiru.co.uk
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: n8n
+                port:
+                  number: 80
+</file>
+
+<file path="k8s/oauth2-proxy/values.yaml">
+config:
+  existingSecret: oauth2-proxy-creds
+  configFile: |-
+    oidc_issuer_url = "https://sso.sikiru.co.uk/realms/Sikiru-Lab"
+    # This is a andatory scopes for email validation
+    scope = "openid profile email"
+    email_domains = [ "*" ]
+    upstreams = [ "static://200" ]
+    provider = "oidc"
+    redirect_url = "https://oauth2.sikiru.co.uk/oauth2/callback"
+    cookie_domains = [ ".sikiru.co.uk" ]
+    whitelist_domains = [ ".sikiru.co.uk" ]
+    # FIXED THE 500 CALLBACK ERROR
+    insecure_oidc_allow_unverified_email = true
+
+    # HARDENING FIXES:
+    # Stops the proxy from redirecting internal HTTP to external HTTPS
+    reverse_proxy = true
+    force_https = false
+    # Ensures the proxy trusts the Ingress headers
+    set_xauthrequest = true
+    set_authorization_header = true
+    ssl_insecure_skip_verify = true
+
+ingress:
+  enabled: true
+  # Standard field
+  ingressClassName: nginx
+  # Legacy/Alternative field
+  className: nginx
+  # Path settings
+  path: /
+  # Corrected 'hosts' vs 'hostname'
+  hosts:
+    - oauth2.sikiru.co.uk
+  annotations:
+    # Fallback annotation (The Ingress Controller reads this if the spec fails)
+    kubernetes.io/ingress.class: nginx
+    cert-manager.io/cluster-issuer: letsencrypt-cloudflare
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+    nginx.ingress.kubernetes.io/proxy-set-headers: "X-Forwarded-Proto=https"
+    nginx.ingress.kubernetes.io/proxy-buffer-size: "16k"
+    nginx.ingress.kubernetes.io/proxy-buffers-number: "4"
+    nginx.ingress.kubernetes.io/large-client-header-buffers: "4 16k"
+  tls:
+    - secretName: n8n-oauth2-proxy-tls
+      hosts:
+        - oauth2.sikiru.co.uk
+</file>
+
+<file path="k8s/gridops/ingress.yaml">
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: gridops-ingress
+  namespace: n8n
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-cloudflare
+    nginx.ingress.kubernetes.io/backend-protocol: HTTP
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "false"
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: portal.sikiru.co.uk
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: gridops-service
+                port:
+                  number: 80
+  tls:
+    - hosts:
+        - portal.sikiru.co.uk
+      secretName: gridops-tls
+</file>
+
+<file path="src/gridops/gridops_core/urls.py">
+from catalog import views as catalog_views # Import the new view
+⋮----
+# A temporary "Home" view to verify SSO works
+def home(request)
+⋮----
+# If Keycloak works, this prints the user's email
+⋮----
+# If not logged in, show a Login button
+⋮----
+urlpatterns = [
+⋮----
+# This enables the /oidc/authenticate/ endpoint
+⋮----
+# Point the root URL to catalog app's URLs
+</file>
+
+<file path="k8s/logging/values.yaml">
+loki:
+  image:
+    repository: grafana/loki
+    tag: 2.9.3 
+    pullPolicy: IfNotPresent
+  enabled: true
+  auth_enabled: false
+  isDefault: false
+  persistence:
+    enabled: true
+    storageClassName: longhorn # Uses RAID-backed storage
+    size: 10Gi
+    accessModes:
+      - ReadWriteOnce
+
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 100m
+      memory: 256Mi
+
+promtail:
+  enabled: true
+  # Promtail needs to run on every node to catch all logs
+  config:
+    lokiAddress: http://logging-stack-loki.logging.svc.cluster.local:3100/loki/api/v1/push
+    clients:
+      - url: http://logging-stack-loki.logging.svc.cluster.local:3100/loki/api/v1/push
+
+# Disable things already have or don't need
+grafana:
+  enabled: false
+prometheus:
+  enabled: false
+fluent-bit:
+  enabled: false
+</file>
+
+<file path="k8s/n8n/n8n-deployment.yaml">
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: n8n
+  namespace: n8n
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: n8n
+  template:
+    metadata:
+      labels:
+        app: n8n
+    spec:
+      securityContext:
+        fsGroup: 1000
+      initContainers:
+      - name: volume-permissions
+        image: busybox:latest
+        resources:
+          limits:
+            cpu: "100m"
+            memory: "64Mi"  # Very small, just for chown
+          requests:
+            cpu: "50m"
+            memory: "32Mi"
+        command: ["sh", "-c", "chown 1000:1000 /home/node/.n8n && chown -R 1000:1000 /home/node/.n8n"]
+        securityContext:
+          runAsUser: 0
+          privileged: false
+        volumeMounts:
+        - name: n8n-data
+          mountPath: /home/node/.n8n
+      containers:
+        - name: n8n
+          image: n8nio/n8n:latest
+          resources:
+            limits:
+              cpu: "500m"
+              memory: "1Gi"   # Your production limit
+            requests:
+              cpu: "250m"
+              memory: "512Mi" # Guaranteed amount
+          securityContext:
+            runAsUser: 1000
+          ports:
+            - containerPort: 5678
+          env:
+            - name: N8N_AUTH_EXCLUDE_ENDPOINTS
+              value: "/healthz"
+            - name: DB_TYPE
+              value: postgresdb
+            - name: DB_POSTGRESDB_HOST
+              value: green-energy-db-postgresql.n8n.svc.cluster.local
+            - name: DB_POSTGRESDB_PORT
+              value: "5432"
+            - name: N8N_VERSION_NOTIFICATIONS_ENABLED
+              value: "true"
+            - name: N8N_SOURCE_CONTROL_ENABLED
+              value: "true"
+            - name: DB_POSTGRESDB_DATABASE
+              value: n8n
+            - name: DB_POSTGRESDB_USER
+              value: postgres
+            - name: N8N_PROXY_HOPS
+              value: "1"
+            - name: N8N_USER_MANAGEMENT_DISABLED
+              value: "false"
+            - name: DB_POSTGRESDB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-credentials
+                  key: postgres-password
+            - name: N8N_ENCRYPTION_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: n8n-secrets
+                  key: N8N_ENCRYPTION_KEY
+            - name: N8N_BASIC_AUTH_ACTIVE
+              valueFrom:
+                secretKeyRef:
+                  name: n8n-secrets
+                  key: N8N_BASIC_AUTH_ACTIVE
+            - name: N8N_BASIC_AUTH_USER
+              valueFrom:
+                secretKeyRef:
+                  name: n8n-secrets
+                  key: N8N_BASIC_AUTH_USER
+            - name: N8N_BASIC_AUTH_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: n8n-secrets
+                  key: N8N_BASIC_AUTH_PASSWORD
+            - name: WEBHOOK_URL
+              value: https://n8n.sikiru.co.uk
+            - name: N8N_HOST
+              value: n8n.sikiru.co.uk
+            - name: N8N_PORT
+              value: "5678"
+            - name: N8N_PROTOCOL
+              value: https
+          volumeMounts:
+            - name: n8n-data
+              mountPath: /home/node/.n8n
+      volumes:
+        - name: n8n-data
+          persistentVolumeClaim:
+            claimName: n8n-data
+</file>
+
+<file path="src/gridops/catalog/views.py">
+@login_required
+def catalog_home(request)
+⋮----
+services = ServiceTemplate.objects.all()
+⋮----
+# --- HELPER FUNCTION: RECURSIVE COPY ---
+# Source: Ensures the "Standardized Template" (Source [1]) is fully copied (Code + Helm Charts + CI Config)
+def copy_recursive(github_object, source_repo, target_repo, path="")
+⋮----
+"""
+    Recursively copies all files from source_repo to target_repo starting at 'path'.
+    """
+contents = source_repo.get_contents(path)
+⋮----
+# If directory, recurse deeper
+⋮----
+# If file, create it in the new repo
+⋮----
+# Sleep to prevent hitting GitHub API rate limits (Secondary Source [3]: API limits)
+⋮----
+# File already exists, skip
+⋮----
+@login_required
+def launch_service(request, template_id)
+⋮----
+template = get_object_or_404(ServiceTemplate, pk=template_id)
+⋮----
+form = ServiceForm(request.POST)
+⋮----
+service_name = form.cleaned_data['service_name']
+⋮----
+# 1. Authenticate with GitHub
+token = os.getenv('GITHUB_TOKEN')
+⋮----
+g = Github(token)
+user = g.get_user()
+⋮----
+# =========================================================
+# PART 1: SCAFFOLDING (CREATE NEW REPO)
+# "create a new app repo" for self-service
+⋮----
+new_repo_name = f"{service_name}-source"
+⋮----
+# Create private repo
+source_repo = user.create_repo(new_repo_name, private=True, auto_init=True)
+⋮----
+if e.status == 422: # Already exists
+source_repo = user.get_repo(new_repo_name)
+⋮----
+# PART 2: POPULATE REPO (RECURSIVE COPY)
+# Source [4]: Copies Jenkinsfile (CI), Dockerfile, and Charts
+⋮----
+# Note: Use skeleton name directly, or template.skeleton_repo_url can be use if parsed
+skeleton = g.get_repo("JimohAdebayo-DevOps/gridops-skeleton-python")
+⋮----
+# Start recursive copy from the root of the skeleton
+⋮----
+# PART 3: GITOPS HANDOFF (ARGO CD MANIFEST)
+# Cluster state is wholly determined by version-controlled manifests
+⋮----
+cluster_repo = user.get_repo("gridops-cluster-state")
+⋮----
+# CRITICAL: Point Argo CD to the NEW user repository
+target_repo_url = source_repo.clone_url
+⋮----
+# Define the Argo CD Application
+file_content = f"""
+⋮----
+# Commit the manifest to the Cluster State Repo
+⋮----
+# 4. Record Success in Database
+⋮----
+# Error Handling
+⋮----
+form = ServiceForm()
+</file>
+
+<file path="k8s/jenkins/values.yaml">
+controller:
+  image:
+    tag: "2.479.3-lts-jdk21"
+  securityContext:
+    runAsUser: 1000
+    fsGroup: 1000
+  admin:
+    existingSecret: "jenkins-admin-credentials"
+    userKey: "jenkins-admin-user"
+    passwordkey: "jenkins-admin-password"
+  installPlugins: []
+# Resource Management
+  resources:
+    requests:
+      cpu: "100m"
+      memory: "1Gi"
+    limits:
+      cpu: "1000m"
+      memory: "2Gi"
+
+  # Networking (Ingress)
+  ingress:
+    enabled: true
+    ingressClassName: nginx
+    hostName: jenkins.sikiru.co.uk
+    annotations:
+      cert-manager.io/cluster-issuer: letsencrypt-cloudflare
+      # Using native annotations since snippets are disabled
+      nginx.ingress.kubernetes.io/proxy-body-size: "50m"
+      nginx.ingress.kubernetes.io/backend-protocol: HTTP
+      nginx.ingress.kubernetes.io/force-ssl-redirect: "false"
+      nginx.ingress.kubernetes.io/ssl-redirect: "false"
+    tls:
+      - secretName: jenkins-tls-cert
+        hosts:
+          - jenkins.sikiru.co.uk
+
+  # Storage (Longhorn)
+  persistence:
+    enabled: true
+    storageClass: longhorn
+    size: "10Gi"
+  # JCasC: This pre-configures Jenkins to use Keycloak on first boot
+  JCasC:
+    defaultConfig: true
+    configScripts:
+      welcome-message: |
+        jenkins:
+          systemMessage: "Welcome to Sikiru-Lab Jenkins CI/CD. Authenticated via Keycloak."
+
+# Service Account for Ephemeral Agents
+serviceAccount:
+  create: true
+  name: jenkins
+</file>
+
+<file path="src/gridops/gridops_core/settings.py">
+"""
+Django settings for gridops_core project.
+
+Generated by 'django-admin startproject' using Django 5.2.10.
+
+For more information on this file, see
+https://docs.djangoproject.com/en/5.2/topics/settings/
+
+For the full list of settings and their values, see
+https://docs.djangoproject.com/en/5.2/ref/settings/
+"""
+⋮----
+# Build paths inside the project like this: BASE_DIR / 'subdir'.
+BASE_DIR = Path(__file__).resolve().parent.parent
+⋮----
+# Quick-start development settings - unsuitable for production
+# See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
+⋮----
+# SECURITY WARNING: keep the secret key used in production secret!
+SECRET_KEY = 'django-insecure-olcghcqkn*-u=m!u^@*r+)=+$0ia=#&!nipy$fgtu@^^)epdym'
+⋮----
+# SECURITY WARNING: don't run with debug turned on in production!
+DEBUG = True
+⋮----
+ALLOWED_HOSTS = ['portal.sikiru.co.uk', 'localhost', '127.0.0.1']
+⋮----
+# Application definition
+⋮----
+INSTALLED_APPS = [
+⋮----
+MIDDLEWARE = [
+⋮----
+ROOT_URLCONF = 'gridops_core.urls'
+⋮----
+TEMPLATES = [
+⋮----
+WSGI_APPLICATION = 'gridops_core.wsgi.application'
+⋮----
+# Database
+# https://docs.djangoproject.com/en/5.2/ref/settings/#databases
+⋮----
+DATABASES = {
+⋮----
+# Password validation
+# https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
+⋮----
+AUTH_PASSWORD_VALIDATORS = [
+⋮----
+# Internationalization
+# https://docs.djangoproject.com/en/5.2/topics/i18n/
+⋮----
+LANGUAGE_CODE = 'en-us'
+⋮----
+TIME_ZONE = 'UTC'
+⋮----
+USE_I18N = True
+⋮----
+USE_TZ = True
+⋮----
+# Static files (CSS, JavaScript, Images)
+# https://docs.djangoproject.com/en/5.2/howto/static-files/
+⋮----
+STATIC_URL = 'static/'
+⋮----
+# Default primary key field type
+# https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
+⋮----
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+⋮----
+STATIC_ROOT = BASE_DIR / "staticfiles"
+STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
+# ==============================================
+# KEYCLOAK SSO CONFIGURATION (GridOps)
+⋮----
+# 1. To tell Django to use Keycloak for Auth
+AUTHENTICATION_BACKENDS = (
+⋮----
+'django.contrib.auth.backends.ModelBackend',  # Fallback for local admin
+⋮----
+# 2. Read the Secrets injected via Kubernetes
+OIDC_RP_CLIENT_ID = os.environ.get('OIDC_RP_CLIENT_ID')
+OIDC_RP_CLIENT_SECRET = os.environ.get('OIDC_RP_CLIENT_SECRET')
+⋮----
+# 3. Define the Signing Key (Use the secret key as a fallback)
+OIDC_RP_SIGN_ALGO = 'RS256'
+⋮----
+# 4. Keycloak Endpoints (Pointing to your SSO server)
+OIDC_OP_AUTHORIZATION_ENDPOINT = "https://sso.sikiru.co.uk/realms/Sikiru-Lab/protocol/openid-connect/auth"
+OIDC_OP_TOKEN_ENDPOINT = "https://sso.sikiru.co.uk/realms/Sikiru-Lab/protocol/openid-connect/token"
+OIDC_OP_USER_ENDPOINT = "https://sso.sikiru.co.uk/realms/Sikiru-Lab/protocol/openid-connect/userinfo"
+OIDC_OP_JWKS_ENDPOINT = "https://sso.sikiru.co.uk/realms/Sikiru-Lab/protocol/openid-connect/certs"
+⋮----
+# 5. Redirect Behavior
+LOGIN_URL = "/oidc/authenticate/"
+LOGIN_REDIRECT_URL = '/'
+LOGOUT_REDIRECT_URL = '/'
+# SECURITY: Trust the 'X-Forwarded-Proto' header coming from Cloudflare/Ingress
+# This is to fix the "Invalid parameter: redirect_uri" error by forcing HTTPS links.
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'http')
+USE_X_FORWARDED_HOST = True
+USE_X_FORWARDED_PORT = True
+</file>
+
+<file path="k8s/keycloak/values.yaml">
+auth:
+  adminUser: admin
+  existingSecret: keycloak-admin-secret
+  passwordKey: admin-password
+
+# Fixed for Bitnami image deprecation
+image:
+  registry: docker.io
+  repository: bitnamilegacy/keycloak
+  tag: 26.3.3-debian-12-r0
+
+# Disabled internal DB and point to n8n Postgres
+postgresql:
+  enabled: false
+
+externalDatabase:
+  host: postgresql-db.n8n.svc.cluster.local
+  port: 5432
+  user: keycloak
+  database: keycloak
+  existingSecret: keycloak-db-secret
+  existingSecretPasswordKey: password
+
+# Keycloak 26 Proxy & Hostname Configuration
+proxy: edge
+extraEnvVars:
+  - name: KC_PROXY
+    value: "edge" 
+  - name: KC_PROXY_HEADERS
+    value: "xforwarded"
+  - name: KC_HOSTNAME_URL
+    value: "https://sso.sikiru.co.uk" 
+  - name: KC_HTTP_RELATIVE_PATH
+    value: "/"
+
+# Optimized resources
+resources:
+  limits:
+    memory: 2Gi
+    cpu: 1000m
+  requests:
+    memory: 1Gi
+    cpu: 500m
+
+# Corrected Ingress Section
+ingress:
+  enabled: true
+  ingressClassName: nginx
+  hostname: sso.sikiru.co.uk
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-cloudflare
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "false"
+    nginx.ingress.kubernetes.io/backend-protocol: "HTTP"
+    nginx.ingress.kubernetes.io/proxy-buffer-size: "128k"
+    nginx.ingress.kubernetes.io/proxy-buffers-number: "4"
+    nginx.ingress.kubernetes.io/proxy-busy-buffers-size: "256k"
+  # FIXED: Bitnami expects a boolean 'true' here, not a list
+  tls: true
+</file>
+
+<file path="k8s/gridops/deployment.yaml">
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gridops-portal
+  namespace: n8n # Colocate with DB and n8n for easier networking
+  labels:
+    app: gridops
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: gridops
+  template:
+    metadata:
+      labels:
+        app: gridops
+    spec:
+      containers:
+        - name: django
+          image: jimoh1990/gridops:v20
+          ports:
+            - containerPort: 8000
+          env:
+            # Connect existing HA Postgres
+            - name: DB_HOST
+              value: "postgresql-db.n8n.svc.cluster.local"
+            - name: DB_NAME
+              value: "gridops"
+            - name: DB_USER
+              value: "postgres"
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-credentials
+                  key: postgres-password
+            - name: GITHUB_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: github-token
+                  key: GITHUB_TOKEN
+            - name: SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: gridops-secrets
+                  key: django-secret-key
+            - name: OIDC_RP_CLIENT_ID
+              value: "gridops-portal"
+            - name: OIDC_RP_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: gridops-secrets
+                  key: oidc-secret
+</file>
+
+</files>
