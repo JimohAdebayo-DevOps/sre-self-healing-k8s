@@ -39,9 +39,6 @@ def copy_recursive(github_object, source_repo, target_repo, path=""):
                 # File already exists, skip
                 pass
 
-# NEW IMPORTS FOR KUBERNETES
-from kubernetes import client, config
-
 # --- HELPER: AUTOMATED SECRET CREATION ---
 def create_argocd_secret(repo_url, repo_name):
     """
@@ -53,7 +50,7 @@ def create_argocd_secret(repo_url, repo_name):
         try:
             config.load_incluster_config()
         except config.ConfigException:
-            # Fallback for local testing (uses ~/.kube/config)
+            # Fallback for local testing (uses your ~/.kube/config)
             config.load_kube_config()
 
         v1 = client.CoreV1Api()
@@ -80,15 +77,15 @@ def create_argocd_secret(repo_url, repo_name):
             type="Opaque"
         )
 
-        # To Send to Kubernetes API
+        # Send to Kubernetes API
         v1.create_namespaced_secret(namespace="argocd", body=secret)
         print(f"✅ Successfully created Argo CD secret: {secret_name}")
         return True
 
     except Exception as e:
         print(f"❌ Failed to create Kubernetes Secret: {e}")
-        # In production, this might be log or meant to throw an error,
-        # but for now just to print it so the view doesn't crash.
+        # In production, you might want to log this or throw an error,
+        # but for now we print it so the view doesn't crash.
         return False
 
 
@@ -118,9 +115,6 @@ def launch_service(request, template_id):
                 try:
                     # Create private repo
                     source_repo = user.create_repo(new_repo_name, private=True, auto_init=True)
-                    # NEW: Create the Kubernetes Secret immediately
-                    print(f"Triggering secret creation for {new_repo_name}...") 
-                    create_argocd_secret(source_repo.clone_url, new_repo_name)
                 except GithubException as e:
                     if e.status == 422: # Already exists
                         source_repo = user.get_repo(new_repo_name)
