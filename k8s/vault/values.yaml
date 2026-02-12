@@ -1,8 +1,7 @@
-# Lightweight Dev Mode (Runs in RAM, Auto-Unseals)
+# 1. Server Block (Root Level)
 server:
   dev:
     enabled: true
-  
   resources:
     requests:
       memory: 256Mi
@@ -11,28 +10,28 @@ server:
       memory: 512Mi
       cpu: 500m
 
-  # To enable the UI so secrets can be seen
-  ui:
-    enabled: true
-    serviceType: ClusterIP 
-    serviceNodePort: null  # Disable NodePort since using Ingress
-    externalPort: 8200
+ui:
+  enabled: true
+  serviceType: "ClusterIP"
+  serviceNodePort: null
+  externalPort: 8200
 
-# Enabled Ingress so it can be accessed via the UI
-    ingress:
-      enabled: true
-      ingressClassName: nginx
-      hosts:
-        - host: vault.sikiru.co.uk
-          paths: []  # The chart handles the default path automatically
-      annotations:
-        cert-manager.io/cluster-issuer: letsencrypt-cloudflare
-        nginx.ingress.kubernetes.io/backend-protocol: HTTP
-        nginx.ingress.kubernetes.io/force-ssl-redirect: "false"
-        nginx.ingress.kubernetes.io/ssl-redirect: "false"
-        # Increases buffer size for large Vault tokens/responses
-        nginx.ingress.kubernetes.io/proxy-body-size: "10m"
-      tls:
-        - secretName: vault-tls
-          hosts:
-            - vault.sikiru.co.uk
+  ingress:
+    enabled: true
+    ingressClassName: "nginx"
+    
+    annotations:
+      cert-manager.io/cluster-issuer: "letsencrypt-cloudflare"
+      nginx.ingress.kubernetes.io/backend-protocol: "HTTP"
+      nginx.ingress.kubernetes.io/force-ssl-redirect: "false"
+      nginx.ingress.kubernetes.io/ssl-redirect: "false"
+      nginx.ingress.kubernetes.io/proxy-body-size: "10m"
+
+    hosts:
+      - host: vault.sikiru.co.uk
+        paths: []
+
+    tls:
+      - secretName: vault-tls
+        hosts:
+          - vault.sikiru.co.uk
