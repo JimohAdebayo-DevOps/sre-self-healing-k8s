@@ -1,0 +1,35 @@
+# Lightweight Dev Mode (Runs in RAM, Auto-Unseals)
+server:
+  dev:
+    enabled: true
+  
+  resources:
+    requests:
+      memory: 256Mi
+      cpu: 250m
+    limits:
+      memory: 512Mi
+      cpu: 500m
+
+  # To enable the UI so secrets can be seen
+  ui:
+    enabled: true
+    serviceType: ClusterIP 
+
+# Enabled Ingress so it can be accessed via the UI
+ui:
+  enabled: true
+  ingress:
+    enabled: true
+    ingressClassName: nginx
+    hosts:
+      - host: vault.sikiru.co.uk
+    annotations:
+      cert-manager.io/cluster-issuer: letsencrypt-cloudflare
+      nginx.ingress.kubernetes.io/backend-protocol: HTTP
+      nginx.ingress.kubernetes.io/force-ssl-redirect: "false"
+      nginx.ingress.kubernetes.io/ssl-redirect: "false"
+    tls:
+      - secretName: vault-tls
+        hosts:
+          - vault.sikiru.co.uk
