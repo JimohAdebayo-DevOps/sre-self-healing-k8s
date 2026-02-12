@@ -15,21 +15,24 @@ server:
   ui:
     enabled: true
     serviceType: ClusterIP 
+    serviceNodePort: null  # Disable NodePort since using Ingress
+    externalPort: 8200
 
 # Enabled Ingress so it can be accessed via the UI
-ui:
-  enabled: true
-  ingress:
-    enabled: true
-    ingressClassName: nginx
-    hosts:
-      - host: vault.sikiru.co.uk
-    annotations:
-      cert-manager.io/cluster-issuer: letsencrypt-cloudflare
-      nginx.ingress.kubernetes.io/backend-protocol: HTTP
-      nginx.ingress.kubernetes.io/force-ssl-redirect: "false"
-      nginx.ingress.kubernetes.io/ssl-redirect: "false"
-    tls:
-      - secretName: vault-tls
-        hosts:
-          - vault.sikiru.co.uk
+    ingress:
+      enabled: true
+      ingressClassName: nginx
+      hosts:
+        - host: vault.sikiru.co.uk
+          paths: []  # The chart handles the default path automatically
+      annotations:
+        cert-manager.io/cluster-issuer: letsencrypt-cloudflare
+        nginx.ingress.kubernetes.io/backend-protocol: HTTP
+        nginx.ingress.kubernetes.io/force-ssl-redirect: "false"
+        nginx.ingress.kubernetes.io/ssl-redirect: "false"
+        # Increases buffer size for large Vault tokens/responses
+        nginx.ingress.kubernetes.io/proxy-body-size: "10m"
+      tls:
+        - secretName: vault-tls
+          hosts:
+            - vault.sikiru.co.uk
