@@ -1,7 +1,9 @@
-# 1. Server Block (Root Level)
+# 1. Server Configuration (The Backend)
 server:
   dev:
     enabled: true
+  
+  # Minimal Resources for cluster
   resources:
     requests:
       memory: 256Mi
@@ -10,28 +12,15 @@ server:
       memory: 512Mi
       cpu: 500m
 
+# 2. UI Configuration (The Frontend)
 ui:
   enabled: true
   serviceType: "ClusterIP"
   serviceNodePort: null
   externalPort: 8200
 
+  # 3. Ingress Configuration - DISABLED
+  # Set this to 'false' because of providing 
+  # a manual 'manual-ingress.yaml' file instead.
   ingress:
-    enabled: true
-    ingressClassName: "nginx"
-    
-    annotations:
-      cert-manager.io/cluster-issuer: "letsencrypt-cloudflare"
-      nginx.ingress.kubernetes.io/backend-protocol: "HTTP"
-      nginx.ingress.kubernetes.io/force-ssl-redirect: "false"
-      nginx.ingress.kubernetes.io/ssl-redirect: "false"
-      nginx.ingress.kubernetes.io/proxy-body-size: "10m"
-
-    hosts:
-      - host: vault.sikiru.co.uk
-        paths: []
-
-    tls:
-      - secretName: vault-tls
-        hosts:
-          - vault.sikiru.co.uk
+    enabled: false

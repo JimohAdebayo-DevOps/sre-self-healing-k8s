@@ -1,0 +1,32 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: vault-ui
+  namespace: vault
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-cloudflare
+    # Standard Nginx settings
+    nginx.ingress.kubernetes.io/backend-protocol: "HTTP"
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "false"
+    nginx.ingress.kubernetes.io/proxy-body-size: "10m"
+    # Ensure this is owned by the Vault service logic
+    app.kubernetes.io/instance: vault
+    app.kubernetes.io/name: vault
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts:
+        - vault.sikiru.co.uk
+      secretName: vault-tls
+  rules:
+    - host: vault.sikiru.co.uk
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: vault-ui  # This match the service created by Helm
+                port:
+                  number: 8200
