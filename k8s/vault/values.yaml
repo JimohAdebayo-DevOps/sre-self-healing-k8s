@@ -1,26 +1,36 @@
-# 1. Server Configuration (The Backend)
 server:
+  # 1. DISABLE DEV MODE
   dev:
-    enabled: true
+    enabled: false
   
-  # Minimal Resources for cluster
+  # 2. ENABLE PERSISTENCE (Write to disk)
+  dataStorage:
+    enabled: true
+    size: 10Gi
+    storageClass: "longhorn"
+    accessMode: ReadWriteOnce
+
+  # 3. RESOURCE LIMITS (Production Sizing)
   resources:
     requests:
-      memory: 256Mi
+      memory: 512Mi
       cpu: 250m
     limits:
-      memory: 512Mi
+      memory: 1Gi
       cpu: 500m
 
-# 2. UI Configuration (The Frontend)
+  # 4. STANDALONE MODE (Simpler than HA for a single-cluster IDP)
+  # To use a file backend which is robust enough for this scale
+  ha:
+    enabled: false
+
+# 5. UI Configuration
 ui:
   enabled: true
   serviceType: "ClusterIP"
   serviceNodePort: null
   externalPort: 8200
 
-  # 3. Ingress Configuration - DISABLED
-  # Set this to 'false' because of providing 
-  # a manual 'manual-ingress.yaml' file instead.
+  # To keep this disabled because of using 'manual-ingress.yaml'
   ingress:
     enabled: false
