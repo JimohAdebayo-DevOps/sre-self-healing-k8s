@@ -158,27 +158,37 @@ metadata:
   namespace: argocd
 spec:
   project: default
-  source:
-    repoURL: {target_repo_url}
-    targetRevision: HEAD
-    path: charts/python-app  # <--- MUST MATCH the folder structure in your Skeleton
+  sources:
+    # SOURCE 1: The Secure Blueprint (Controlled strictly by Platform Team)
+    - repoURL: 'https://github.com/JimohAdebayo-DevOps/gridops-skeleton-python.git'
+      targetRevision: main
+      path: {template.default_chart_path}
+      helm:
+        valueFiles:
+          - $values/k8s/values.yaml
+
+    # SOURCE 2: The Developer's Configuration
+    - repoURL: '{target_repo_url}'
+      targetRevision: main
+      ref: values
   destination:
-    server: https://kubernetes.default.svc
+    server: 'https://kubernetes.default.svc'
     namespace: {service_name}
   syncPolicy:
     automated:
       prune: true
       selfHeal: true
     syncOptions:
-      - CreateNamespace=true  # Source [5]: Namespace isolation
+      - CreateNamespace=true
 """
-                
+
                 # Commit the manifest to the Cluster State Repo
                 cluster_repo.create_file(
                     path=f"apps/{service_name}.yaml",
-                    message=f"feat: provision {service_name} via portal",
+                    message=f"feat: provision {service_name} via secure multi-source portal",
                     content=file_content
                 )
+
                 
                 # 4. Record Success in Database
                 DeployedService.objects.create(
