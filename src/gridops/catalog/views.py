@@ -17,13 +17,23 @@ def catalog_home(request):
 # Source: Ensures the "Standardized Template" (Source [1]) is fully copied (Code + Helm Charts + CI Config)
 def copy_recursive(github_object, source_repo, target_repo, path=""):
     """
-    Recursively copies all files from source_repo to target_repo starting at 'path'.
+    Recursively copies all files from source_repo to target_repo starting at 'path',
+    BUT explicitly skips the 'charts' folder to enforce the Multi-Source GitOps architecture.
     """
     contents = source_repo.get_contents(path)
-    
+
     for content_file in contents:
+        # ---------------------------------------------------------
+        # ARCHITECTURAL GUARDRAIL: 
+        # Skip the 'charts' folder so the developer gets a clean repo 
+        # (Code + Config only). The heavy Helm charts stay in the Skeleton.
+        # ---------------------------------------------------------
+        if "charts" in content_file.path:
+            print(f"Skipping infrastructure blueprint: {content_file.path}")
+            continue
+
         if content_file.type == "dir":
-            # If directory, recurse deeper
+            # If directory (like 'k8s'), recurse deeper
             copy_recursive(github_object, source_repo, target_repo, content_file.path)
         else:
             # If file, create it in the new repo
@@ -33,10 +43,11 @@ def copy_recursive(github_object, source_repo, target_repo, path=""):
                     message=f"init: scaffold {content_file.path}",
                     content=content_file.decoded_content
                 )
-                # Sleep to prevent hitting GitHub API rate limits (Secondary Source [3]: API limits)
-                time.sleep(0.2) 
+                # Sleep to prevent hitting GitHub API rate limits
+                time.sleep(0.2)
             except GithubException:
                 # File already exists, skip
+                print(f"Skipping {content_file.path} - already exists")
                 pass
 
 # NEW IMPORTS FOR KUBERNETES
@@ -156,6 +167,9 @@ kind: Application
 metadata:
   name: {service_name}
   namespace: argocd
+  # FINALIZER: Ensures pods are deleted when app is deleted
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
 spec:
   project: default
   sources:
