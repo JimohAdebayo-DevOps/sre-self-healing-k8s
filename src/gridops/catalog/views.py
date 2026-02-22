@@ -142,8 +142,9 @@ def launch_service(request, template_id):
                 # PART 2: POPULATE REPO (RECURSIVE COPY)
                 # Source [4]: Copies Jenkinsfile (CI), Dockerfile, and Charts
                 # =========================================================
-                # Note: Use skeleton name directly, or template.skeleton_repo_url can be use if parsed
-                skeleton = g.get_repo("JimohAdebayo-DevOps/gridops-skeleton-python")
+                # We extract the repo name from the URL stored in the Database 
+                skeleton_name = template.skeleton_repo_url.replace("https://github.com/", "").replace(".git", "")
+                skeleton = g.get_repo(skeleton_name)
                 
                 try:
                     # Start recursive copy from the root of the skeleton

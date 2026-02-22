@@ -18,7 +18,7 @@ spec:
       serviceAccountName: gridops-portal-sa
       containers:
         - name: django
-          image: jimoh1990/gridops:v24
+          image: jimoh1990/gridops:v25
           ports:
             - containerPort: 8000
           env:
