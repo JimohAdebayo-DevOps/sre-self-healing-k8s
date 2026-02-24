@@ -18,3 +18,12 @@ Thumbs.db
 # Secrets (NEVER push these)
 *.env
 .secrets
+
+# ========================
+# TERRAFORM SECURITY
+# ========================
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars
+crash.log
