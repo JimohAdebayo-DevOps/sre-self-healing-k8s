@@ -18,3 +18,18 @@ variable "junior_initial_password" {
   type        = string
   sensitive   = true
 }
+
+variable "jenkins_secret" {
+  type      = string
+  sensitive = true
+}
+
+variable "gridops_secret" {
+  type      = string
+  sensitive = true
+}
+
+variable "n8n_secret" {
+  type      = string
+  sensitive = true
+}

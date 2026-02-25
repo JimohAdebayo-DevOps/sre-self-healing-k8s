@@ -39,6 +39,7 @@ resource "keycloak_openid_client" "jenkins" {
   client_id                    = "jenkins"
   name                         = "Jenkins CI"
   enabled                      = true
+  client_secret                = var.jenkins_secret 
 
   access_type                  = "CONFIDENTIAL"
   standard_flow_enabled        = true
@@ -55,6 +56,7 @@ resource "keycloak_openid_client" "gridops" {
   client_id             = "gridops-portal"
   name                  = "GridOps IDP Portal"
   enabled               = true
+  client_secret         = var.gridops_secret
 
   access_type           = "CONFIDENTIAL"
   standard_flow_enabled = true
@@ -71,6 +73,7 @@ resource "keycloak_openid_client" "n8n" {
   client_id             = "n8n-proxy"
   name                  = "N8n Automation"
   enabled               = true
+  client_secret         = var.n8n_secret
 
   access_type           = "CONFIDENTIAL"
   standard_flow_enabled = true
@@ -101,6 +104,7 @@ resource "keycloak_user" "junior_dev" {
   email      = "junior@sikiru.co.uk"
   first_name = "Junior"
   last_name  = "Developer"
+  email_verified = true
 
   initial_password {
     value     = var.junior_initial_password
@@ -116,4 +120,36 @@ resource "keycloak_user_groups" "junior_groups" {
   group_ids = [
     keycloak_group.developers.id
   ]
+}
+
+
+# ==============================================================================
+# EXISTING GROUPS & USERS (Imported)
+# ==============================================================================
+
+resource "keycloak_group" "jenkins_admin" {
+  realm_id = keycloak_realm.sikiru_lab.id
+  name     = "jenkins-admin"
+}
+
+resource "keycloak_user" "sikiru_dev" {
+  realm_id = keycloak_realm.sikiru_lab.id
+  username = "sikiru-dev"
+  enabled  = true
+
+  email      = "admin@sikiru.co.uk"
+  first_name = "Sikiru"
+  last_name  = "Jimoh"
+  email_verified = true
+}
+
+resource "keycloak_user" "test_read_user" {
+  realm_id = keycloak_realm.sikiru_lab.id
+  username = "test-read-user"
+  enabled  = true
+
+  email      = "jimoh.chibek@gmail.com"
+  first_name = "Abdullah"
+  last_name  = "Jimoh"
+  email_verified = true
 }
