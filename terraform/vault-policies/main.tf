@@ -49,20 +49,32 @@ EOT
 }
 
 # POLICY 2: The Cluster Robot (External Secrets Operator)
-# The cluster needs to read EVERYTHING to run the apps.
+# The cluster needs to read specific application secrets to run the apps.
 resource "vault_policy" "eso_robot" {
   name = "eso-robot-policy"
 
   policy = <<EOT
+# 1. Allow reading the exact secret data
+path "secret/data/production-app-05" {
+  capabilities = ["read"]
+}
+
+# 2. Allow reading secrets nested inside a folder (future-proofing)
 path "secret/data/production-app-05/*" {
   capabilities = ["read"]
 }
+
+# 3. Allow checking the secret's metadata (ESO uses this to check if the secret changed)
+path "secret/metadata/production-app-05" {
+  capabilities = ["list", "read"]
+}
+
+# 4. Allow listing nested metadata
 path "secret/metadata/production-app-05/*" {
-  capabilities = ["list"]
+  capabilities = ["list", "read"]
 }
 EOT
 }
-
 # ==============================================================================
 # USERS (Identity)
 # ==============================================================================
