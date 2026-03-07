@@ -3,121 +3,106 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sikiru GridOps Portal</title>
-    <style>
-        /* Basic Styling to look like a modern IDP */
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f4f7f6;
-            margin: 0;
-            padding: 20px;
-        }
-
-        /* Header Section */
-        .header {
-            background-color: #ffffff;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 30px;
-        }
-
-        .header h1 { margin: 0; color: #333; }
-
-        .user-info { font-size: 14px; color: #666; }
-
-        /* Grid Layout for the Catalog Cards */
-        .grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 25px;
-        }
-
-        /* The Card Design */
-        .card {
-            background: white;
-            padding: 25px;
-            border-radius: 12px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-            transition: transform 0.2s;
-            border: 1px solid #e0e0e0;
-        }
-
-        .card:hover { transform: translateY(-5px); box-shadow: 0 8px 15px rgba(0,0,0,0.1); }
-
-        .card h3 { margin-top: 0; color: #2c3e50; }
-
-        .card p { color: #7f8c8d; line-height: 1.5; font-size: 14px; }
-
-        .repo-link {
-            display: block;
-            margin: 15px 0;
-            font-size: 12px;
-            color: #bdc3c7;
-            text-overflow: ellipsis;
-            overflow: hidden;
-            white-space: nowrap;
-        }
-
-        /* The Launch Button */
-        .btn {
-            background-color: #3498db;
-            color: white;
-            padding: 10px 20px;
-            text-decoration: none;
-            display: block;
-            width: 100%;
-            text-align: center;
-            box-sizing: border-box;
-        }
-
-        .btn:hover { background-color: #2980b9; }
-    </style>
+    <title>GridOps | Internal Developer Platform</title>
+    <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body>
-
-    <!-- Top Bar: Shows who is logged in -->
-    <div class="header">
-        <div>
-            <h1>☸️ Service Catalog</h1>
-            <p style="margin:5px 0 0 0; color:#777;">Select a template to provision infrastructure</p>
+<body class="bg-slate-900 text-gray-100 min-h-screen">
+    
+    <!-- Navigation Bar -->
+    <nav class="bg-slate-800 border-b border-slate-700 p-4 flex justify-between items-center shadow-lg">
+        <div class="flex items-center space-x-3">
+            <span class="text-2xl">☸️</span>
+            <h1 class="text-xl font-bold tracking-wider text-blue-400">GridOps <span class="text-gray-400 text-sm">IDP</span></h1>
         </div>
-        <div class="user-info">
-            Logged in as: <strong>{{ user.email }}</strong>
-
-            <!-- Link to Admin Panel (Only visible to Superusers) -->
-            {% if user.is_superuser %}
-                <span style="margin: 0 10px;">|</span>
-                <a href="/admin" style="color: #e74c3c; text-decoration: none; font-weight: bold;">⚙️ Manage Catalog</a>
+        <div>
+            {% if user.is_authenticated %}
+                <span class="mr-4 text-sm text-green-400">Logged in as: {{ user.email }}</span>
+                <a href="/oidc/logout/" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded shadow transition">Logout</a>
+            {% else %}
+                <a href="/oidc/authenticate/" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded shadow transition">SSO Login (Keycloak)</a>
             {% endif %}
         </div>
-    </div>
+    </nav>
 
-    <!-- The Grid of Templates -->
-    <div class="grid">
-        {% for service in services %}
-        <div class="card">
-            <h3>{{ service.name }}</h3>
-            <p>{{ service.description }}</p>
-
-            <div class="repo-link">
-                📄 Source: {{ service.skeleton_repo_url }}
+    <main class="max-w-7xl mx-auto p-6 grid grid-cols-1 lg:grid-cols-4 gap-6 mt-6">
+        
+        <!-- Left Column: Architect Profile -->
+        <aside class="col-span-1 bg-slate-800 p-6 rounded-lg shadow-md border border-slate-700 h-fit">
+            <div class="text-center mb-4">
+                <div class="w-24 h-24 bg-blue-600 rounded-full mx-auto flex items-center justify-center text-3xl font-bold mb-3 shadow-inner">
+                    SA
+                </div>
+                <h2 class="text-xl font-bold text-white">{{ profile.name }}</h2>
+                <p class="text-blue-400 text-sm font-semibold">{{ profile.role }}</p>
             </div>
+            <hr class="border-slate-700 my-4">
+            <div>
+                <h3 class="text-xs uppercase text-gray-400 font-bold mb-2">Core Stack</h3>
+                <p class="text-sm text-gray-300">{{ profile.stack }}</p>
+            </div>
+            <div class="mt-4">
+                <h3 class="text-xs uppercase text-gray-400 font-bold mb-2">Certifications</h3>
+                <div class="flex flex-wrap gap-2">
+                    {% for cert in profile.certifications %}
+                    <span class="bg-slate-700 text-blue-300 text-xs px-2 py-1 rounded border border-slate-600">{{ cert }}</span>
+                    {% endfor %}
+                </div>
+            </div>
+        </aside>
 
-            <!-- This button will eventually trigger the PyGithub automation -->
-            <a href="{% url 'launch_service' service.id %}" class="btn">🚀 Launch Service</a>
-        </div>
-        {% empty %}
-        <!-- Empty State if no templates exist -->
-        <div style="grid-column: 1 / -1; text-align: center; padding: 50px;">
-            <h3>No templates found.</h3>
-            <p>Please ask an administrator to add Service Templates in the Admin Panel.</p>
-        </div>
-        {% endfor %}
-    </div>
+        <!-- Center Column: Cluster Services Grid -->
+        <section class="col-span-1 lg:col-span-2">
+            <h2 class="text-2xl font-bold mb-4 text-white">Cluster Observability & Management</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {% for link in cluster_links %}
+                <a href="{{ link.url }}" target="_blank" class="block bg-slate-800 p-5 rounded-lg border border-slate-700 hover:border-blue-500 hover:shadow-[0_0_15px_rgba(59,130,246,0.3)] transition group">
+                    <div class="flex items-center space-x-3 mb-2">
+                        <span class="text-2xl group-hover:scale-110 transition">{{ link.icon }}</span>
+                        <h3 class="text-lg font-bold text-gray-100 group-hover:text-blue-400 transition">{{ link.name }}</h3>
+                    </div>
+                    <p class="text-sm text-gray-400">{{ link.desc }}</p>
+                </a>
+                {% endfor %}
+            </div>
+        </section>
 
+        <!-- Right Column: GitOps Self-Service -->
+        <section class="col-span-1 bg-slate-800 p-6 rounded-lg shadow-md border border-slate-700 h-fit">
+            <h2 class="text-xl font-bold mb-2 text-white">Provision Environment</h2>
+            <p class="text-sm text-gray-400 mb-6">Trigger the Jenkins GitOps Write-Back Loop.</p>
+            
+            {% if user.is_authenticated %}
+                {% for template in templates %}
+                <div class="mb-6 p-4 border border-slate-700 rounded bg-slate-900 shadow-inner">
+                    <h3 class="font-bold text-blue-400 mb-1">{{ template.name }}</h3>
+                    <p class="text-xs text-gray-400 mb-4">{{ template.description }}</p>
+
+                    <!-- Safe URL generation targeting the specific template ID -->
+                    <form method="POST" action="{% url 'launch_service' template.id %}" class="space-y-4">
+                        {% csrf_token %}
+                        {% for field in form %}
+                        <div>
+                            <label class="block text-xs font-medium text-gray-300 mb-1">{{ field.label }}</label>
+                            <div class="w-full bg-slate-800 border border-slate-600 rounded text-gray-200 px-3 py-2 text-sm focus:outline-none focus:border-blue-500">
+                                {{ field }}
+                            </div>
+                        </div>
+                        {% endfor %}
+                        <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded text-sm transition shadow-lg mt-2">
+                            Deploy via GitOps
+                        </button>
+                    </form>
+                </div>
+                {% empty %}
+                   <p class="text-sm text-gray-400">No GitOps templates found in database.</p>
+                {% endfor %}
+            {% else %}
+                <div class="bg-slate-900 border border-red-900/50 p-4 rounded text-center">
+                    <p class="text-red-400 text-sm mb-3">Authentication required to provision infrastructure.</p>
+                    <span class="text-3xl">🛑</span>
+                </div>
+            {% endif %}
+        </section>
+    </main>
 </body>
 </html>

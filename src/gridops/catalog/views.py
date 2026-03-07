@@ -9,11 +9,11 @@ from .forms import ServiceForm
 from kubernetes import client, config
 
 # =========================================================
-# 1. THE ARCHITECT DASHBOARD 
+# 1. THE NEW ARCHITECT DASHBOARD
 # =========================================================
 def catalog_home(request):
-    # Cluster Services Map - Routes to your existing Ingress endpoints
-    cluster_services = [
+    # Cluster Services Map - Use a distinct variable name
+    cluster_links = [
         {'name': 'Argo CD', 'url': 'https://argocd.sikiru.co.uk', 'icon': '⚙️', 'desc': 'GitOps Delivery Pipeline'},
         {'name': 'Grafana', 'url': 'https://grafana.sikiru.co.uk', 'icon': '📊', 'desc': 'Hardware & RAID Observability'},
         {'name': 'n8n', 'url': 'https://n8n.sikiru.co.uk', 'icon': '🤖', 'desc': 'Event-Driven Automation'},
@@ -29,13 +29,16 @@ def catalog_home(request):
         'stack': 'Kubernetes, Proxmox, GitOps, Python, Keycloak'
     }
 
+    # Fetch the actual GitOps blueprints from the database
+    db_templates = ServiceTemplate.objects.all()
+
     context = {
-        'services': cluster_services,
+        'cluster_links': cluster_links,
         'profile': architect_profile,
+        'templates': db_templates, # Passed safely without collision
     }
     
     # Principle of Least Privilege: Only render the provisioning form 
-    # and pass it to the UI if Keycloak confirms the user is authenticated.
     if request.user.is_authenticated:
         context['form'] = ServiceForm()
 
