@@ -8,10 +8,38 @@ from .models import ServiceTemplate, DeployedService
 from .forms import ServiceForm
 from kubernetes import client, config
 
-@login_required
+# =========================================================
+# 1. THE ARCHITECT DASHBOARD 
+# =========================================================
 def catalog_home(request):
-    services = ServiceTemplate.objects.all()
-    return render(request, 'catalog/home.html', {'services': services})
+    # Cluster Services Map - Routes to your existing Ingress endpoints
+    cluster_services = [
+        {'name': 'Argo CD', 'url': 'https://argocd.sikiru.co.uk', 'icon': '⚙️', 'desc': 'GitOps Delivery Pipeline'},
+        {'name': 'Grafana', 'url': 'https://grafana.sikiru.co.uk', 'icon': '📊', 'desc': 'Hardware & RAID Observability'},
+        {'name': 'n8n', 'url': 'https://n8n.sikiru.co.uk', 'icon': '🤖', 'desc': 'Event-Driven Automation'},
+        {'name': 'Longhorn', 'url': 'https://longhorn.sikiru.co.uk', 'icon': '💾', 'desc': 'Distributed Block Storage'},
+        {'name': 'Keycloak', 'url': 'https://sso.sikiru.co.uk', 'icon': '🛡️', 'desc': 'Identity & Access Management'},
+    ]
+
+    # Architect Profile Data
+    architect_profile = {
+        'name': 'Jimoh Sikiru Adebayo',
+        'role': 'Platform & DevOps Engineer',
+        'certifications': ['CKA', 'GCP ACE', 'KCNA', 'MTCNA'],
+        'stack': 'Kubernetes, Proxmox, GitOps, Python, Keycloak'
+    }
+
+    context = {
+        'services': cluster_services,
+        'profile': architect_profile,
+    }
+    
+    # Principle of Least Privilege: Only render the provisioning form 
+    # and pass it to the UI if Keycloak confirms the user is authenticated.
+    if request.user.is_authenticated:
+        context['form'] = ServiceForm()
+
+    return render(request, 'catalog/home.html', context)
 
 # --- HELPER FUNCTION: RECURSIVE COPY ---
 # Source: Ensures the "Standardized Template" (Source [1]) is fully copied (Code + Helm Charts + CI Config)
