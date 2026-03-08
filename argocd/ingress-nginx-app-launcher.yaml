@@ -10,17 +10,24 @@ spec:
   source:
     repoURL: https://kubernetes.github.io/ingress-nginx
     chart: ingress-nginx
-    targetRevision: 4.11.2 # This chart version installs Controller v1.11.2
+    targetRevision: 4.11.2
     helm:
-      parameters:
-        - name: controller.service.type
-          value: "LoadBalancer" # This protects MetalLB connection
+      # ARCHITECTURAL FIX: Use inline values to permanently inject the API coordinates
+      values: |
+        controller:
+          service:
+            type: LoadBalancer
+          extraEnvs:
+            - name: KUBERNETES_SERVICE_HOST
+              value: "192.168.0.150" # Replace with actual k8s-master-01 IP
+            - name: KUBERNETES_SERVICE_PORT
+              value: "6443"
   destination:
     server: https://kubernetes.default.svc
     namespace: ingress-nginx
   syncPolicy:
     automated:
-      prune: false # CRITICAL: Prevents Argo CD from deleting existing parts
+      prune: false 
       selfHeal: true
     syncOptions:
       - CreateNamespace=false
