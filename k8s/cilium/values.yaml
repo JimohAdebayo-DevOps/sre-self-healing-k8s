@@ -1,5 +1,9 @@
 kubeProxyReplacement: strict
 
+# ARCHITECTURAL FIX: Explicitly define the physical API server 
+k8sServiceHost: "192.168.0.150"
+k8sServicePort: "6443"
+
 encryption:
   enabled: true
   type: wireguard
@@ -16,7 +20,6 @@ routingMode: native
 bpf:
   masquerade: true
 
-# ARCHITECTURAL FIX: Explicitly take over Calico's IP pool
 ipam:
   mode: "cluster-pool"
   operator:
