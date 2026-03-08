@@ -8,15 +8,20 @@ metadata:
 spec:
   project: default
   sources:
+    # SOURCE 1: The Official Vendor Chart
     - repoURL: 'https://helm.cilium.io/'
       chart: cilium
       targetRevision: 1.15.1
+      # ARCHITECTURAL FIX: Helm config nested under the specific chart source
+      helm:
+        valueFiles:
+          - $values/k8s/cilium/values.yaml
+          
+    # SOURCE 2: Your Sovereign Configuration Repo
     - repoURL: 'https://github.com/JimohAdebayo-DevOps/sre-self-healing-k8s.git'
       targetRevision: main
       ref: values
-  helm:
-    valueFiles:
-      - $values/k8s/cilium/values.yaml
+      
   destination:
     server: 'https://kubernetes.default.svc'
     namespace: kube-system
