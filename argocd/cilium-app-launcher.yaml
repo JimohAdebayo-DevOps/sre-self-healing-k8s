@@ -1,0 +1,26 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: cilium-cni
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+spec:
+  project: default
+  sources:
+    - repoURL: 'https://helm.cilium.io/'
+      chart: cilium
+      targetRevision: 1.15.1
+    - repoURL: 'https://github.com/JimohAdebayo-DevOps/sre-self-healing-k8s.git'
+      targetRevision: main
+      ref: values
+  helm:
+    valueFiles:
+      - $values/k8s/cilium/values.yaml
+  destination:
+    server: 'https://kubernetes.default.svc'
+    namespace: kube-system
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true

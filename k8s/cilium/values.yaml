@@ -1,0 +1,24 @@
+kubeProxyReplacement: strict
+
+encryption:
+  enabled: true
+  type: wireguard
+  wireguard:
+    persistentKeepalive: 25
+
+clusterMesh:
+  enabled: true
+  apiserver:
+    service:
+      type: LoadBalancer 
+
+routingMode: native
+bpf:
+  masquerade: true
+
+# ARCHITECTURAL FIX: Explicitly take over Calico's IP pool
+ipam:
+  mode: "cluster-pool"
+  operator:
+    clusterPoolIPv4PodCIDRList: ["172.16.0.0/16"]
+    clusterPoolIPv4MaskSize: 24
