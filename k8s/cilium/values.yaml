@@ -1,6 +1,6 @@
 # sre-self-healing-k8s/k8s/cilium/values.yaml
 kubeProxyReplacement: strict
-k8sServiceHost: "YOUR_MASTER_NODE_IP" 
+k8sServiceHost: "192.168.0.150" 
 k8sServicePort: "6443"
 
 encryption:
