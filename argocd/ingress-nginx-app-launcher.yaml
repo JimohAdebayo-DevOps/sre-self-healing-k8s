@@ -7,21 +7,19 @@ metadata:
     argocd.argoproj.io/sync-wave: "1"
 spec:
   project: default
-  source:
-    repoURL: https://kubernetes.github.io/ingress-nginx
-    chart: ingress-nginx
-    targetRevision: 4.11.2
-    helm:
-      # ARCHITECTURAL FIX: Use inline values to permanently inject the API coordinates
-      values: |
-        controller:
-          service:
-            type: LoadBalancer
-          extraEnvs:
-            - name: KUBERNETES_SERVICE_HOST
-              value: "192.168.0.150" # Replace with actual k8s-master-01 IP
-            - name: KUBERNETES_SERVICE_PORT
-              value: "6443"
+  # ARCHITECTURAL SHIFT: Implement the Dual-Source Pattern
+  sources:
+    - repoURL: https://kubernetes.github.io/ingress-nginx
+      chart: ingress-nginx
+      targetRevision: 4.11.2
+      helm:
+        valueFiles:
+          - $values/k8s/ingress-nginx/values.yaml
+          
+    - repoURL: https://github.com/JimohAdebayo-DevOps/sre-self-healing-k8s.git
+      targetRevision: main
+      ref: values
+      
   destination:
     server: https://kubernetes.default.svc
     namespace: ingress-nginx

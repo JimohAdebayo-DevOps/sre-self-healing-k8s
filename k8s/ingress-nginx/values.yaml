@@ -1,0 +1,15 @@
+controller:
+  service:
+    type: LoadBalancer
+  
+  # INDUSTRY-STANDARD SRE FIX: Disable the validating webhook during a CNI migration 
+  # to completely eliminate the API Server deadlock causing the liveness probe crash.
+  admissionWebhooks:
+    enabled: false
+
+  # Explicitly bypass the broken eBPF ClusterIP
+  extraEnvs:
+    - name: KUBERNETES_SERVICE_HOST
+      value: "192.168.0.150"
+    - name: KUBERNETES_SERVICE_PORT
+      value: "6443"
