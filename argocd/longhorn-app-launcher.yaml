@@ -18,5 +18,8 @@ spec:
     namespace: longhorn-system
   syncPolicy:
     automated:
-      prune: false # Set to false initially so it doesn't delete existing volumes
+      prune: false 
       selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true 

@@ -8,21 +8,22 @@ metadata:
 spec:
   project: default
   sources:
-    # SOURCE 1: The official MetalLB Installation Manifest
-    - repoURL: 'https://github.com/metallb/metallb.git'
-      path: config/manifests
-      targetRevision: v0.14.5 
-
+    # SOURCE 1: The Official MetalLB Helm Chart (Schema-Perfect)
+    - chart: metallb
+      repoURL: https://metallb.github.io/metallb
+      targetRevision: 0.14.5
+      
+    # SOURCE 2: Your Sovereign Network Configuration
     - repoURL: 'https://github.com/JimohAdebayo-DevOps/sre-self-healing-k8s.git'
       targetRevision: main
-      path: k8s/metallb # Points to config.yaml
+      path: k8s/metallb 
   destination:
     server: 'https://kubernetes.default.svc'
     namespace: metallb-system
   syncPolicy:
     automated:
-      prune: false # Safety: don't delete existing networking
+      prune: false 
       selfHeal: true
     syncOptions:
-      - CreateNamespace=false
-      - Validate=false # Manifests can sometimes have version-specific validation issues
+      - CreateNamespace=true
+      - ServerSideApply=true
