@@ -1,16 +1,45 @@
 USER-SUPPLIED VALUES:
 auth:
   enabled: true
+
 global:
   postgresql:
     auth:
       existingSecret: postgres-credentials
+
 primary:
   persistence:
     size: 10Gi
     storageClass: longhorn
+
   resources:
     limits:
       memory: 1Gi
     requests:
       memory: 512Mi
+
+  # 1. Securely inject the password as an environment variable
+  extraEnvVars:
+    - name: KEYCLOAK_DB_PASSWORD
+      valueFrom:
+        secretKeyRef:
+          name: keycloak-db-secret
+          key: password
+
+  # 2. Use a Bash script to read the secure variable from memory
+  initdb:
+    scripts:
+      01-init-databases.sh: |
+        #!/bin/bash
+        set -e
+        echo "Executing Sovereign Database Initialization..."
+        
+        # Connect using the internal postgres socket and execute the creation
+        psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-EOSQL
+            CREATE DATABASE keycloak;
+            CREATE USER keycloak WITH PASSWORD '${KEYCLOAK_DB_PASSWORD}';
+            GRANT ALL PRIVILEGES ON DATABASE keycloak TO keycloak;
+            
+            CREATE DATABASE gridops;
+            CREATE DATABASE n8n;
+        EOSQL
