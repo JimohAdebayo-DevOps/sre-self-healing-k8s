@@ -1,29 +1,40 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: metallb-system
+  name: metallb-infrastructure
   namespace: argocd
-  annotations:
-    argocd.argoproj.io/sync-wave: "1"
 spec:
   project: default
-  sources:
-    # SOURCE 1: The Official MetalLB Helm Chart (Schema-Perfect)
-    - chart: metallb
-      repoURL: https://metallb.github.io/metallb
-      targetRevision: 0.14.5
-      
-    # SOURCE 2: Your Sovereign Network Configuration
-    - repoURL: 'https://github.com/JimohAdebayo-DevOps/sre-self-healing-k8s.git'
-      targetRevision: main
-      path: k8s/metallb 
+  source:
+    chart: metallb
+    repoURL: https://metallb.github.io/metallb
+    targetRevision: 0.14.5
   destination:
     server: 'https://kubernetes.default.svc'
     namespace: metallb-system
   syncPolicy:
     automated:
-      prune: false 
+      prune: true 
       selfHeal: true
     syncOptions:
       - CreateNamespace=true
-      - ServerSideApply=true
+      - ServerSideApply=true 
+      - RespectIgnoreDifferences=true # <--- CRITICAL FIX: Forces SSA to ignore the caBundle
+  ignoreDifferences:
+    # 1. Ignore the dynamic certificates injected into the CRDs (The true culprit!)
+    - group: apiextensions.k8s.io
+      kind: CustomResourceDefinition
+      jqPathExpressions:
+        - '.spec.conversion.webhook.clientConfig.caBundle'
+        
+    # 2. Ignore the standard Validation webhooks
+    - group: admissionregistration.k8s.io
+      kind: ValidatingWebhookConfiguration
+      jqPathExpressions:
+        - '.webhooks[].clientConfig.caBundle'
+        
+    # 3. Ignore the standard Mutation webhooks
+    - group: admissionregistration.k8s.io
+      kind: MutatingWebhookConfiguration
+      jqPathExpressions:
+        - '.webhooks[].clientConfig.caBundle'
