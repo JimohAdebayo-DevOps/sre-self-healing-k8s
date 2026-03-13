@@ -18,11 +18,19 @@ primary:
       memory: 512Mi
 
   extraEnvVars:
+    # Inject the Keycloak DB password for the creation script
     - name: KEYCLOAK_DB_PASSWORD
       valueFrom:
         secretKeyRef:
           name: keycloak-db-secret
           key: password
+    
+    # CRITICAL FIX: Inject the Admin password so 'psql' authenticates silently
+    - name: PGPASSWORD
+      valueFrom:
+        secretKeyRef:
+          name: postgres-credentials
+          key: postgres-password
 
   initdb:
     scripts:
@@ -31,7 +39,7 @@ primary:
         set -e
         echo "Executing Sovereign Database Initialization..."
         
-        # Hardcode the internal postgres socket user, bypassing unbound variables
+        # psql will automatically use the $PGPASSWORD environment variable
         psql -v ON_ERROR_STOP=1 --username "postgres" --dbname "postgres" <<-EOSQL
             CREATE DATABASE keycloak;
             CREATE USER keycloak WITH PASSWORD '${KEYCLOAK_DB_PASSWORD}';
