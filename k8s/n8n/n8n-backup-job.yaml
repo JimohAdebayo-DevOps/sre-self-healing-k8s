@@ -26,6 +26,9 @@ spec:
             - /bin/sh
             - -c
             - |
+              # CRITICAL SRE FIX: Enforce pipeline failure if pg_dump fails
+              set -o pipefail
+              
               DATE=$(date +%Y-%m-%d_%H-%M)
               DB_FILE="/backup/n8n_db_$DATE.sql.gz"
               FS_FILE="/backup/n8n_files_$DATE.tar.gz"
@@ -34,7 +37,11 @@ spec:
 
               # 1. Database Backup
               echo "Dumping Database..."
-              pg_dump -h n8n-postgres -U postgres n8n_db | gzip > $DB_FILE
+              pg_dump -h postgresql-db.n8n.svc.cluster.local -U postgres n8n | gzip > $DB_FILE
+
+              # 2. Keycloak Identity Backup (To prevent Identity Loss)
+              echo "Dumping Keycloak Database..."
+              pg_dump -h postgresql-db.n8n.svc.cluster.local -U postgres keycloak | gzip > "/backup/keycloak_db_$DATE.sql.gz"
 
               # 2. Binary & Config Backup
               echo "Archiving n8n Files (Binaries/Configs)..."

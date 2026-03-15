@@ -5,21 +5,25 @@ metadata:
   namespace: argocd
 spec:
   project: default
-  source:
-    chart: longhorn
-    repoURL: https://charts.longhorn.io
-    targetRevision: 1.10.1
-    helm:
-      values: |
-        persistence:
-          defaultClass: true
+  sources:
+    - chart: longhorn
+      repoURL: https://charts.longhorn.io
+      targetRevision: 1.10.1
+      helm:
+        values: |
+          persistence:
+            defaultClass: true
+
+    - repoURL: 'https://github.com/JimohAdebayo-DevOps/sre-self-healing-k8s.git'
+      targetRevision: main
+      path: k8s/longhorn
   destination:
     server: https://kubernetes.default.svc
     namespace: longhorn-system
   syncPolicy:
     automated:
-      prune: false 
+      prune: false
       selfHeal: true
     syncOptions:
       - CreateNamespace=true
-      - ServerSideApply=true 
+      - ServerSideApply=true
