@@ -16,6 +16,7 @@ controller:
     - workflow-aggregator
     - git
     - github-branch-source
+    - job-dsl
     
     # 2. Ephemeral Architecture
     - kubernetes
