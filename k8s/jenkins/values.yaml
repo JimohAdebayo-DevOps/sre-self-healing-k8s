@@ -9,24 +9,24 @@ controller:
     userKey: "jenkins-admin-user"
     passwordkey: "jenkins-admin-password"
   # ==============================================================
-  # THE GITOPS SRE UPGRADE: Explicit Plugin Resolution
+  # THE GITOPS SRE UPGRADE: Dynamic Plugin Resolution
   # ==============================================================
   installPlugins:
     # 1. Pipeline & GitOps Core
-    - workflow-aggregator:590.v6a_d052e5a_a_b_5
-    - git:5.2.1
-    - github-branch-source:1797.v1f3a_14e719ed
+    - workflow-aggregator
+    - git
+    - github-branch-source
     
     # 2. Ephemeral Architecture
-    - kubernetes:4.2.1                           # For launching isolated Kaniko build pods
+    - kubernetes
     
     # 3. Security & Zero Trust Boundaries
-    - credentials-binding:642.v196ca_9bb_887a_   # Extracts Vault secrets from K8s to active memory
-    - keycloak:3.0.0                             # Bridges the OIDC Single Sign-On boundary
-    - role-strategy:685.v13161c27254e            # Enforces Principle of Least Privilege (RBAC)
+    - credentials-binding
+    - keycloak
+    - role-strategy
     
     # 4. GitOps State Convergence
-    - configuration-as-code:1775.v810dc950b_514  # The JCasC engine itself
+    - configuration-as-code
 # Resource Management
   resources:
     requests:
