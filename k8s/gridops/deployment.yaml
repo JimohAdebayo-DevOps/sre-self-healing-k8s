@@ -16,6 +16,47 @@ spec:
         app: gridops
     spec:
       serviceAccountName: gridops-portal-sa
+      # ==============================================================
+      # THE GITOPS SRE UPGRADE: Zero-Touch Migrations & RBAC Bootstrap
+      # ==============================================================
+      initContainers:
+        - name: django-migrate
+          image: jimoh1990/gridops:v20
+          command: 
+            - "/bin/sh"
+            - "-c"
+            - |
+              echo "Executing database migrations..."
+              python manage.py migrate
+              
+              echo "Executing Zero-Touch Superuser Provisioning..."
+              # The '|| true' makes this idempotent. If the user already exists 
+              # on subsequent pod reboots, it safely ignores the error and continues.
+              python manage.py createsuperuser --noinput --username gridadmin --email admin@sikiru.co.uk || true
+          env:
+            - name: DB_HOST
+              value: "postgresql-db.n8n.svc.cluster.local"
+            - name: DB_NAME
+              value: "gridops"
+            - name: DB_USER
+              value: "postgres"
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-credentials
+                  key: postgres-password
+            - name: SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: gridops-secrets
+                  key: django-secret-key
+            # Django strictly looks for this variable when using --noinput
+            - name: DJANGO_SUPERUSER_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: gridops-secrets
+                  # SRE Shortcut: Reusing the Django Secret Key as the initial
+                  key: django-secret-key
       containers:
         - name: django
           image: jimoh1990/gridops:v27
