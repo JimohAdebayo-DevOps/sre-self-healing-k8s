@@ -8,7 +8,25 @@ controller:
     existingSecret: "jenkins-admin-credentials"
     userKey: "jenkins-admin-user"
     passwordkey: "jenkins-admin-password"
-  installPlugins: []
+  # ==============================================================
+  # THE GITOPS SRE UPGRADE: Explicit Plugin Resolution
+  # ==============================================================
+  installPlugins:
+    # 1. Pipeline & GitOps Core
+    - workflow-aggregator:590.v6a_d052e5a_a_b_5
+    - git:5.2.1
+    - github-branch-source:1797.v1f3a_14e719ed
+    
+    # 2. Ephemeral Architecture
+    - kubernetes:4.2.1                           # For launching isolated Kaniko build pods
+    
+    # 3. Security & Zero Trust Boundaries
+    - credentials-binding:642.v196ca_9bb_887a_   # Extracts Vault secrets from K8s to active memory
+    - keycloak:3.0.0                             # Bridges the OIDC Single Sign-On boundary
+    - role-strategy:685.v13161c27254e            # Enforces Principle of Least Privilege (RBAC)
+    
+    # 4. GitOps State Convergence
+    - configuration-as-code:1775.v810dc950b_514  # The JCasC engine itself
 # Resource Management
   resources:
     requests:
@@ -40,13 +58,105 @@ controller:
     enabled: true
     storageClass: longhorn
     size: "10Gi"
-  # JCasC: This pre-configures Jenkins to use Keycloak on first boot
+  # 1. Inject the Vault-backed secret into Jenkins' active memory
+  containerEnv:
+    - name: GITHUB_USER
+      valueFrom:
+        secretKeyRef:
+          name: jenkins-github-creds
+          key: username
+    - name: GITHUB_TOKEN
+      valueFrom:
+        secretKeyRef:
+          name: jenkins-github-creds
+          key: token
+
+  # 2. Jenkins Configuration as Code (JCasC)
   JCasC:
     defaultConfig: true
     configScripts:
       welcome-message: |
         jenkins:
           systemMessage: "Welcome to Sikiru-Lab Jenkins CI/CD. Authenticated via Keycloak."
+      
+      # 3. Forge the Credentials mathematically
+      credentials: |
+        credentials:
+          system:
+            domainCredentials:
+              - credentials:
+                  - usernamePassword:
+                      scope: GLOBAL
+                      id: "github-pat"  # This perfectly matches Jenkinsfile!
+                      username: "${GITHUB_USER}"
+                      password: "${GITHUB_TOKEN}"
+                      description: "GitHub PAT for GitOps Write-Back Loop"
+      # ==============================================================
+      # THE GITOPS SRE UPGRADE: Zero Trust Security Realm (Keycloak SSO)
+      # ==============================================================
+      security: |
+        jenkins:
+          securityRealm:
+            keycloak:
+              keycloakJson: |
+                {
+                  "realm": "Sikiru-Lab",
+                  "auth-server-url": "https://sso.sikiru.co.uk/",
+                  "ssl-required": "external",
+                  "resource": "jenkins",
+                  "public-client": true,
+                  "confidential-port": 0
+                }
+          authorizationStrategy:
+            roleBased:
+              roles:
+                global:
+                  - name: "admin"
+                    description: "GridOps Platform Administrators"
+                    permissions:
+                      - "Overall/Administer"
+                    assignments:
+                      - "jenkins-admins" # This must mathematically match your Keycloak Group name
+                  - name: "developer"
+                    description: "GridOps Developers"
+                    permissions:
+                      - "Overall/Read"
+                      - "Job/Build"
+                      - "Job/Read"
+                      - "Job/Workspace"
+                    assignments:
+                      - "GridEngineers" # Matches your existing Keycloak group
+
+      # 4. Automate the GitHub Organization Setup
+      jobs: |
+        jobs:
+          - script: >
+              organizationFolder('GridOps-Platform') {
+                  description("Automated CI/CD for GridOps Developer Platform")
+                  displayName("GridOps Sovereign Pipeline")
+                  organizations {
+                      github {
+                          repoOwner("JimohAdebayo-DevOps")
+                          credentialsId("github-pat")
+                          traits {
+                              // Discover all repositories
+                              sourceWildcardFilter {
+                                  includes('*')
+                                  excludes('')
+                              }
+                              // Discover branches with a Jenkinsfile
+                              gitHubBranchDiscovery {
+                                  strategyId(1) 
+                              }
+                          }
+                      }
+                  }
+                  orphanedItemStrategy {
+                      discardOldItems {
+                          numToKeep(10)
+                      }
+                  }
+              }
 
 # Service Account for Ephemeral Agents
 serviceAccount:
