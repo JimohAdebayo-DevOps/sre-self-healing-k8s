@@ -28,10 +28,18 @@ controller:
     
     # 4. GitOps State Convergence
     - configuration-as-code
+
+probes:
+    startupProbe:
+      # This grants the JVM up to 10 minutes (60 tries * 10 seconds) 
+      # to unzip plugins and parse JCasC before the Kubelet is allowed to kill it.
+      failureThreshold: 60
+      periodSeconds: 10
+
 # Resource Management
   resources:
     requests:
-      cpu: "100m"
+      cpu: "500m"
       memory: "1Gi"
     limits:
       cpu: "1000m"
