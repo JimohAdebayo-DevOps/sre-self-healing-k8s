@@ -114,13 +114,15 @@ controller:
                 }
           authorizationStrategy:
             roleBased:
-              # 1. MATHEMATICAL DEFINITION: Create the roles and permissions
               roles:
                 global:
                   - name: "admin"
                     description: "GridOps Platform Administrators"
                     permissions:
                       - "Overall/Administer"
+                    # THE CRITICAL FIX: The modern schema uses typed 'entries'
+                    entries:
+                      - group: "jenkins-admins"
                   - name: "developer"
                     description: "GridOps Developers"
                     permissions:
@@ -128,16 +130,8 @@ controller:
                       - "Job/Build"
                       - "Job/Read"
                       - "Job/Workspace"
-              
-              # 2. MATHEMATICAL ASSIGNMENT: Map the Keycloak Groups to the Roles
-              roleAssignments:
-                global:
-                  - roleName: "admin"
-                    users:
-                      - "jenkins-admins" # Matches Keycloak Group
-                  - roleName: "developer"
-                    users:
-                      - "GridEngineers" # Matches Keycloak Group
+                    entries:
+                      - group: "GridEngineers"
 
       # 4. Automate the GitHub Organization Setup
       jobs: |
