@@ -1,42 +1,38 @@
 controller:
   image:
     tag: "2.492.1-lts-jdk21"
+  
+  javaOpts: "-Xms1024m -Xmx1024m -Djava.awt.headless=true"
+  
   securityContext:
     runAsUser: 1000
     fsGroup: 1000
+    
   admin:
     existingSecret: "jenkins-admin-credentials"
     userKey: "jenkins-admin-user"
     passwordkey: "jenkins-admin-password"
-  # ==============================================================
-  # THE GITOPS SRE UPGRADE: Dynamic Plugin Resolution
-  # ==============================================================
+    
   installPlugins:
-    # 1. Pipeline & GitOps Core
     - workflow-aggregator
     - git
     - github-branch-source
     - job-dsl
-    
-    # 2. Ephemeral Architecture
     - kubernetes
-    
-    # 3. Security & Zero Trust Boundaries
     - credentials-binding
     - keycloak
     - role-strategy
-    
-    # 4. GitOps State Convergence
     - configuration-as-code
 
-probes:
+  # ==============================================================
+  # THE GITOPS SRE UPGRADE: Probe Assassination Immunity
+  # ==============================================================
+  probes:
     startupProbe:
-      # This grants the JVM up to 10 minutes (60 tries * 10 seconds) 
-      # to unzip plugins and parse JCasC before the Kubelet is allowed to kill it.
       failureThreshold: 60
       periodSeconds: 10
 
-# Resource Management
+  # Resource Management
   resources:
     requests:
       cpu: "500m"
