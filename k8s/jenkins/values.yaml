@@ -53,6 +53,22 @@ controller:
       nginx.ingress.kubernetes.io/backend-protocol: HTTP
       nginx.ingress.kubernetes.io/force-ssl-redirect: "false"
       nginx.ingress.kubernetes.io/ssl-redirect: "false"
+
+      # ==============================================================
+      # THE GITOPS SRE UPGRADE: Buffer Expansion & Mixed Content Fix
+      # ==============================================================
+      # 1. Expand Nginx memory buffers to accept massive Keycloak OIDC JWTs
+      # (Matches the proven Keycloak SSO baseline)
+      nginx.ingress.kubernetes.io/proxy-buffer-size: "128k"
+      nginx.ingress.kubernetes.io/proxy-buffers-number: "4"
+      nginx.ingress.kubernetes.io/proxy-busy-buffers-size: "256k"
+      nginx.ingress.kubernetes.io/large-client-header-buffers: "4 128k"
+      
+      # 2. Force Jenkins to load CSS/JS assets over HTTPS to fix the blinking arrow
+      nginx.ingress.kubernetes.io/configuration-snippet: |
+        proxy_set_header X-Forwarded-Proto https;
+        proxy_set_header X-Forwarded-Port 443;
+
     tls:
       - secretName: jenkins-tls-cert
         hosts:
