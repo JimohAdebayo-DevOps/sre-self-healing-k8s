@@ -27,7 +27,7 @@ controller:
     - job-dsl
     - kubernetes
     - credentials-binding
-    - keycloak
+    - oic-auth
     - role-strategy
     - configuration-as-code
 
@@ -70,8 +70,8 @@ controller:
       # Using native annotations since snippets are disabled
       nginx.ingress.kubernetes.io/proxy-body-size: "50m"
       nginx.ingress.kubernetes.io/backend-protocol: HTTP
-      nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
-      nginx.ingress.kubernetes.io/ssl-redirect: "true"
+      nginx.ingress.kubernetes.io/force-ssl-redirect: "false"
+      nginx.ingress.kubernetes.io/ssl-redirect: "false"
 
       # ==============================================================
       # THE GITOPS SRE UPGRADE: Buffer Expansion & Mixed Content Fix
