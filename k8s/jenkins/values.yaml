@@ -1,6 +1,13 @@
 controller:
   image:
     tag: "2.492.1-lts-jdk21"
+
+  # ==============================================================
+  # THE GITOPS SRE UPGRADE: Absolute Identity Lock
+  # ==============================================================
+  # This mathematically forces the Helm chart to generate the JCasC
+  # Root URL as HTTPS, fixing the 400 Bad Request redirect_uri mismatch
+  jenkinsUrl: "https://jenkins.sikiru.co.uk/"
   
   javaOpts: "-Xms1024m -Xmx1024m -Djava.awt.headless=true"
   
