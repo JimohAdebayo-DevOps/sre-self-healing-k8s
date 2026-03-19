@@ -146,19 +146,13 @@ controller:
       security: |
         jenkins:
           securityRealm:
-            keycloak:
-              keycloakJson: |
-                {
-                  "realm": "Sikiru-Lab",
-                  "auth-server-url": "https://sso.sikiru.co.uk/",
-                  "ssl-required": "external",
-                  "resource": "jenkins",
-                  "public-client": false,
-                  "credentials": {
-                    "secret": "${OIDC_CLIENT_SECRET}"
-                  },
-                  "confidential-port": 0
-                }
+            oic:
+              clientId: "jenkins"
+              clientSecret: "${OIDC_CLIENT_SECRET}"
+              wellKnownOpenIDConfigurationUrl: "https://sso.sikiru.co.uk/realms/Sikiru-Lab/.well-known/openid-configuration"
+              scopes: "openid profile email"
+              userNameField: "preferred_username"
+              groupsFieldName: "groups"
           authorizationStrategy:
             roleBased:
               roles:
