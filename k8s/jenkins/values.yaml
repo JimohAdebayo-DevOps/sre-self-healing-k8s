@@ -48,6 +48,18 @@ controller:
       cpu: "1000m"
       memory: "2Gi"
 
+  # ==============================================================
+  # THE GITOPS SRE UPGRADE: JVM-Level Identity Lock
+  # ==============================================================
+  # This Groovy script executes after JCasC on boot, mathematically 
+  # locking the internal Java object to HTTPS to bypass stripped Nginx headers.
+  initScripts:
+    force-secure-root-url: |
+      import jenkins.model.JenkinsLocationConfiguration
+      def config = JenkinsLocationConfiguration.get()
+      config.setUrl("https://jenkins.sikiru.co.uk/")
+      config.save()
+
   # Networking (Ingress)
   ingress:
     enabled: true
@@ -58,8 +70,8 @@ controller:
       # Using native annotations since snippets are disabled
       nginx.ingress.kubernetes.io/proxy-body-size: "50m"
       nginx.ingress.kubernetes.io/backend-protocol: HTTP
-      nginx.ingress.kubernetes.io/force-ssl-redirect: "false"
-      nginx.ingress.kubernetes.io/ssl-redirect: "false"
+      nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+      nginx.ingress.kubernetes.io/ssl-redirect: "true"
 
       # ==============================================================
       # THE GITOPS SRE UPGRADE: Buffer Expansion & Mixed Content Fix
