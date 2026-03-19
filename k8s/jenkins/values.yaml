@@ -80,6 +80,14 @@ controller:
   JCasC:
     defaultConfig: true
     configScripts:
+      # ==============================================================
+      # THE GITOPS SRE UPGRADE: Explicit Root URL Registration
+      # ==============================================================
+      jenkins-location: |
+        unclassified:
+          location:
+            url: "https://jenkins.sikiru.co.uk/"
+
       welcome-message: |
         jenkins:
           systemMessage: "Welcome to Sikiru-Lab Jenkins CI/CD. Authenticated via Keycloak."
