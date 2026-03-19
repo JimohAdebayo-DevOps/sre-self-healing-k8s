@@ -2,24 +2,36 @@ controller:
   image:
     tag: "2.492.1-lts-jdk21"
 
-  # ==============================================================
-  # THE GITOPS SRE UPGRADE: Absolute Identity Lock
-  # ==============================================================
-  # This mathematically forces the Helm chart to generate the JCasC
-  # Root URL as HTTPS, fixing the 400 Bad Request redirect_uri mismatch
+  # The Absolute Identity Lock
   jenkinsUrl: "https://jenkins.sikiru.co.uk/"
-  
+
   javaOpts: "-Xms1024m -Xmx1024m -Djava.awt.headless=true"
-  
+
   securityContext:
     runAsUser: 1000
     fsGroup: 1000
-    
+
+  # Probe Immunity Shield
+  probes:
+    startupProbe:
+      failureThreshold: 60
+      periodSeconds: 10
+
+  # CPU & Memory Resources
+  resources:
+    requests:
+      cpu: "500m"
+      memory: "1Gi"
+    limits:
+      cpu: "1000m"
+      memory: "2Gi"
+
   admin:
     existingSecret: "jenkins-admin-credentials"
     userKey: "jenkins-admin-user"
     passwordkey: "jenkins-admin-password"
-    
+
+  # The Modern Plugin Stack (Notice 'oic-auth' is present, 'keycloak' is gone)
   installPlugins:
     - workflow-aggregator
     - git
@@ -31,74 +43,7 @@ controller:
     - role-strategy
     - configuration-as-code
 
-  # ==============================================================
-  # THE GITOPS SRE UPGRADE: Probe Assassination Immunity
-  # ==============================================================
-  probes:
-    startupProbe:
-      failureThreshold: 60
-      periodSeconds: 10
-
-  # Resource Management
-  resources:
-    requests:
-      cpu: "500m"
-      memory: "1Gi"
-    limits:
-      cpu: "1000m"
-      memory: "2Gi"
-
-  # ==============================================================
-  # THE GITOPS SRE UPGRADE: JVM-Level Identity Lock
-  # ==============================================================
-  # This Groovy script executes after JCasC on boot, mathematically 
-  # locking the internal Java object to HTTPS to bypass stripped Nginx headers.
-  initScripts:
-    force-secure-root-url: |
-      import jenkins.model.JenkinsLocationConfiguration
-      def config = JenkinsLocationConfiguration.get()
-      config.setUrl("https://jenkins.sikiru.co.uk/")
-      config.save()
-
-  # Networking (Ingress)
-  ingress:
-    enabled: true
-    ingressClassName: nginx
-    hostName: jenkins.sikiru.co.uk
-    annotations:
-      cert-manager.io/cluster-issuer: letsencrypt-cloudflare
-      # Using native annotations since snippets are disabled
-      nginx.ingress.kubernetes.io/proxy-body-size: "50m"
-      nginx.ingress.kubernetes.io/backend-protocol: HTTP
-      nginx.ingress.kubernetes.io/force-ssl-redirect: "false"
-      nginx.ingress.kubernetes.io/ssl-redirect: "false"
-
-      # ==============================================================
-      # THE GITOPS SRE UPGRADE: Buffer Expansion & Mixed Content Fix
-      # ==============================================================
-      # 1. Expand Nginx memory buffers to accept massive Keycloak OIDC JWTs
-      # (Matches the proven Keycloak SSO baseline)
-      nginx.ingress.kubernetes.io/proxy-buffer-size: "128k"
-      nginx.ingress.kubernetes.io/proxy-buffers-number: "4"
-      nginx.ingress.kubernetes.io/proxy-busy-buffers-size: "256k"
-      nginx.ingress.kubernetes.io/large-client-header-buffers: "4 128k"
-      
-      # 2. Force Jenkins to load CSS/JS assets over HTTPS to fix the blinking arrow
-      nginx.ingress.kubernetes.io/configuration-snippet: |
-        proxy_set_header X-Forwarded-Proto https;
-        proxy_set_header X-Forwarded-Port 443;
-
-    tls:
-      - secretName: jenkins-tls-cert
-        hosts:
-          - jenkins.sikiru.co.uk
-
-  # Storage (Longhorn)
-  persistence:
-    enabled: true
-    storageClass: longhorn
-    size: "10Gi"
-  # 1. Inject the Vault-backed secret into Jenkins' active memory
+  # Vault-Backed Secret Injection
   containerEnv:
     - name: GITHUB_USER
       valueFrom:
@@ -110,25 +55,20 @@ controller:
         secretKeyRef:
           name: jenkins-github-creds
           key: token
-    # ==============================================================
-    # THE GITOPS SRE UPGRADE: Vault-Backed Keycloak Secret Injection
-    # ==============================================================
     - name: OIDC_CLIENT_SECRET
       valueFrom:
         secretKeyRef:
-          # Match the 'target.name' in external-secret.yaml
           name: jenkins-keycloak-secret
           key: client-secret
 
-  # 2. Jenkins Configuration as Code (JCasC)
+  # Jenkins Configuration as Code (JCasC)
   JCasC:
     defaultConfig: true
     configScripts:
       welcome-message: |
         jenkins:
-          systemMessage: "Welcome to Sikiru-Lab Jenkins CI/CD. Authenticated via Keycloak."
-      
-      # 3. Forge the Credentials mathematically
+          systemMessage: "Welcome to Sikiru-Lab Jenkins CI/CD. Authenticated via Keycloak OIDC."
+
       credentials: |
         credentials:
           system:
@@ -136,13 +76,12 @@ controller:
               - credentials:
                   - usernamePassword:
                       scope: GLOBAL
-                      id: "github-pat"  # This perfectly matches Jenkinsfile!
+                      id: "github-pat"
                       username: "${GITHUB_USER}"
                       password: "${GITHUB_TOKEN}"
                       description: "GitHub PAT for GitOps Write-Back Loop"
-      # ==============================================================
-      # THE GITOPS SRE UPGRADE: Zero Trust Security Realm (Keycloak SSO)
-      # ==============================================================
+
+      # The Modern OIDC Security Realm
       security: |
         jenkins:
           securityRealm:
@@ -161,7 +100,6 @@ controller:
                     description: "GridOps Platform Administrators"
                     permissions:
                       - "Overall/Administer"
-                    # THE CRITICAL FIX: The modern schema uses typed 'entries'
                     entries:
                       - group: "jenkins-admins"
                   - name: "developer"
@@ -174,38 +112,29 @@ controller:
                     entries:
                       - group: "GridEngineers"
 
-      # 4. Automate the GitHub Organization Setup
-      jobs: |
-        jobs:
-          - script: >
-              organizationFolder('GridOps-Platform') {
-                  description("Automated CI/CD for GridOps Developer Platform")
-                  displayName("GridOps Sovereign Pipeline")
-                  organizations {
-                      github {
-                          repoOwner("JimohAdebayo-DevOps")
-                          credentialsId("github-pat")
-                          traits {
-                              // Discover all repositories
-                              sourceWildcardFilter {
-                                  includes('*')
-                                  excludes('')
-                              }
-                              // Discover branches with a Jenkinsfile
-                              gitHubBranchDiscovery {
-                                  strategyId(1) 
-                              }
-                          }
-                      }
-                  }
-                  orphanedItemStrategy {
-                      discardOldItems {
-                          numToKeep(10)
-                      }
-                  }
-              }
+  # Networking (Ingress)
+  ingress:
+    enabled: true
+    ingressClassName: nginx
+    hostName: jenkins.sikiru.co.uk
+    annotations:
+      cert-manager.io/cluster-issuer: letsencrypt-cloudflare
+      nginx.ingress.kubernetes.io/proxy-body-size: "50m"
+      nginx.ingress.kubernetes.io/backend-protocol: HTTP
+      # Strict 301 Loop Prevention
+      nginx.ingress.kubernetes.io/force-ssl-redirect: "false"
+      nginx.ingress.kubernetes.io/ssl-redirect: "false"
+      # JWT Buffer Expansion
+      nginx.ingress.kubernetes.io/proxy-buffer-size: "128k"
+      nginx.ingress.kubernetes.io/proxy-buffers-number: "4"
+      nginx.ingress.kubernetes.io/proxy-busy-buffers-size: "256k"
+      nginx.ingress.kubernetes.io/large-client-header-buffers: "4 128k"
+    tls:
+      - secretName: jenkins-tls-cert
+        hosts:
+          - jenkins.sikiru.co.uk
 
-# Service Account for Ephemeral Agents
-serviceAccount:
-  create: true
-  name: jenkins
+  # Service Account for CI/CD Pipelines
+  serviceAccount:
+    create: true
+    name: jenkins
