@@ -91,6 +91,15 @@ controller:
         secretKeyRef:
           name: jenkins-github-creds
           key: token
+    # ==============================================================
+    # THE GITOPS SRE UPGRADE: Vault-Backed Keycloak Secret Injection
+    # ==============================================================
+    - name: OIDC_CLIENT_SECRET
+      valueFrom:
+        secretKeyRef:
+          # Match the 'target.name' in external-secret.yaml
+          name: jenkins-keycloak-secret
+          key: client-secret
 
   # 2. Jenkins Configuration as Code (JCasC)
   JCasC:
@@ -125,7 +134,10 @@ controller:
                   "auth-server-url": "https://sso.sikiru.co.uk/",
                   "ssl-required": "external",
                   "resource": "jenkins",
-                  "public-client": true,
+                  "public-client": false,
+                  "credentials": {
+                    "secret": "${OIDC_CLIENT_SECRET}"
+                  },
                   "confidential-port": 0
                 }
           authorizationStrategy:
