@@ -88,8 +88,11 @@ controller:
             oic:
               clientId: "jenkins"
               clientSecret: "${OIDC_CLIENT_SECRET}"
-              wellKnownOpenIDConfigurationUrl: "https://sso.sikiru.co.uk/realms/Sikiru-Lab/.well-known/openid-configuration"
-              scopes: "openid profile email"
+              # THE CRITICAL FIX: The modern schema nests the discovery URL 
+              # inside a 'wellKnown' serverConfiguration block.
+              serverConfiguration:
+                wellKnown:
+                  wellKnownOpenIDConfigurationUrl: "https://sso.sikiru.co.uk/realms/Sikiru-Lab/.well-known/openid-configuration"
               userNameField: "preferred_username"
               groupsFieldName: "groups"
           authorizationStrategy:
