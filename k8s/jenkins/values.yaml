@@ -94,6 +94,7 @@ controller:
               # ==============================================================
               serverConfiguration:
                 manual:
+                  issuer: "https://sso.sikiru.co.uk/realms/Sikiru-Lab"
                   authorizationServerUrl: "https://sso.sikiru.co.uk/realms/Sikiru-Lab/protocol/openid-connect/auth"
                   tokenServerUrl: "https://sso.sikiru.co.uk/realms/Sikiru-Lab/protocol/openid-connect/token"
                   userInfoServerUrl: "https://sso.sikiru.co.uk/realms/Sikiru-Lab/protocol/openid-connect/userinfo"
