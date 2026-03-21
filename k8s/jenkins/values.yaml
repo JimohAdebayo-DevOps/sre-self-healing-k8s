@@ -99,7 +99,7 @@ controller:
                   userInfoServerUrl: "https://sso.sikiru.co.uk/realms/Sikiru-Lab/protocol/openid-connect/userinfo"
                   jwksServerUrl: "https://sso.sikiru.co.uk/realms/Sikiru-Lab/protocol/openid-connect/certs"
                   scopes: "openid profile email"
-              userNameField: "jimoh"
+              userNameField: "preferred_username"
               groupsFieldName: "groups"
           authorizationStrategy:
             roleBased:
