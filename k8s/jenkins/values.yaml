@@ -88,12 +88,18 @@ controller:
             oic:
               clientId: "jenkins"
               clientSecret: "${OIDC_CLIENT_SECRET}"
-              # THE CRITICAL FIX: The modern schema nests the discovery URL 
-              # inside a 'wellKnown' serverConfiguration block.
+              # ==============================================================
+              # THE CRITICAL FIX: Deterministic Manual Configuration
+              # Matches Django portal to bypass aggressive scope discovery
+              # ==============================================================
               serverConfiguration:
-                wellKnown:
-                  wellKnownOpenIDConfigurationUrl: "https://sso.sikiru.co.uk/realms/Sikiru-Lab/.well-known/openid-configuration"
-              userNameField: "preferred_username"
+                manual:
+                  authorizationServerUrl: "https://sso.sikiru.co.uk/realms/Sikiru-Lab/protocol/openid-connect/auth"
+                  tokenServerUrl: "https://sso.sikiru.co.uk/realms/Sikiru-Lab/protocol/openid-connect/token"
+                  userInfoServerUrl: "https://sso.sikiru.co.uk/realms/Sikiru-Lab/protocol/openid-connect/userinfo"
+                  jwksServerUrl: "https://sso.sikiru.co.uk/realms/Sikiru-Lab/protocol/openid-connect/certs"
+                  scopes: "openid profile email"
+              userNameField: "jimoh"
               groupsFieldName: "groups"
           authorizationStrategy:
             roleBased:
