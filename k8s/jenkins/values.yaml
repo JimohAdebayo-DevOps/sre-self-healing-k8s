@@ -76,10 +76,38 @@ controller:
               - credentials:
                   - usernamePassword:
                       scope: GLOBAL
+                      # The ID required by the Job DSL script to scan GitHub
                       id: "github-pat"
                       username: "${GITHUB_USER}"
                       password: "${GITHUB_TOKEN}"
-                      description: "GitHub PAT for GitOps Write-Back Loop"
+                      description: "GitHub PAT for Organization Scanning and GitOps Write-Back"
+
+      # ==============================================================
+      # THE GITOPS SRE UPGRADE: Autonomous GitHub Organization Scanning
+      # ==============================================================
+      jobs: |
+        jobs:
+          - script: >
+              organizationFolder('GridOps-Platform') {
+                  description('Autonomously managed by JCasC and Job DSL')
+                  displayName('GridOps Platform Pipelines')
+                  organizations {
+                      github {
+                          repoOwner('JimohAdebayo-DevOps')
+                          credentialsId('github-pat')
+                      }
+                  }
+                  projectFactories {
+                      workflowMultiBranchProjectFactory {
+                          scriptPath('Jenkinsfile')
+                      }
+                  }
+                  triggers {
+                      periodicFolderTrigger {
+                          interval('1d')
+                      }
+                  }
+              }
 
       # The Modern OIDC Security Realm
       security: |
