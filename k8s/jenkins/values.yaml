@@ -95,6 +95,16 @@ controller:
                       github {
                           repoOwner('JimohAdebayo-DevOps')
                           credentialsId('github-pat')
+                          
+                          // THE CRITICAL FIX: Explicitly tell Jenkins to discover branches
+                          traits {
+                              gitHubBranchDiscovery {
+                                  strategyId(1) // 1 = Discover all branches
+                              }
+                              gitHubPullRequestDiscovery {
+                                  strategyId(1) // Discover PRs merging with the target branch
+                              }
+                          }
                       }
                   }
                   projectFactories {
