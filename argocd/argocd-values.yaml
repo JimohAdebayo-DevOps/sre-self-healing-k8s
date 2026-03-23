@@ -2,6 +2,16 @@ global:
   domain: argocd.sikiru.co.uk
 
 configs:
+  credentialTemplates:
+    # This mathematically binds the Vault secret to the entire GitHub Organization
+    github-org-credentials:
+      url: https://github.com/JimohAdebayo-DevOps
+      passwordSecret:
+        name: argocd-github-creds
+        key: token
+      usernameSecret:
+        name: argocd-github-creds
+        key: username
   params:
     server.insecure: "true" # Fixes the 404/Redirect loop
   cm:
