@@ -9,10 +9,9 @@ provider "vault" {
 # ==============================================================================
 
 # Enable "Username & Password" login
-# Note: Since you enabled this in UI, we will 'import' it in the steps below.
 resource "vault_auth_backend" "userpass" {
   type = "userpass"
-  
+
   # Production Security: Force users to log in again every 24 hours
   tune {
     default_lease_ttl = "1h"
@@ -49,38 +48,59 @@ EOT
 }
 
 # POLICY 2: The Cluster Robot (External Secrets Operator)
-# The cluster needs to read specific application secrets to run the apps.
+# Grants the Kubernetes operator permission to read any application secret dynamically.
 resource "vault_policy" "eso_robot" {
   name = "eso-robot-policy"
 
   policy = <<EOT
-# 1. Allow reading the exact secret data
-path "secret/data/production-app-05" {
+# 1. Allow reading ALL secret data payloads across the GridOps platform
+path "secret/data/*" {
   capabilities = ["read"]
 }
 
-# 2. Allow reading secrets nested inside a folder (future-proofing)
-path "secret/data/production-app-05/*" {
+# 2. Allow reading ALL nested secret data
+path "secret/data/*/*" {
   capabilities = ["read"]
 }
 
-# 3. Allow checking the secret's metadata (ESO uses this to check if the secret changed)
-path "secret/metadata/production-app-05" {
+# 3. Allow checking ALL secret metadata (ESO requires this to detect version changes)
+path "secret/metadata/*" {
   capabilities = ["list", "read"]
 }
 
-# 4. Allow listing nested metadata
-path "secret/metadata/production-app-05/*" {
+# 4. Allow listing ALL nested metadata
+path "secret/metadata/*/*" {
   capabilities = ["list", "read"]
 }
 EOT
 }
+
+ 
+# =====================================================================
+# SECURE POLICY: GridOps Public Site
+# Enforces Principle of Least Privilege for the ESO ServiceAccount
+# =====================================================================
+resource "vault_policy" "gridops_public_site_policy" {
+  name = "gridops-public-site-policy"
+
+  policy = <<EOT
+# Grant read access to the specific secret data
+path "secret/data/gridops-public-site" {
+  capabilities = ["read"]
+}
+
+# Grant access to the metadata (Strictly required by Vault KV V2 engine)
+path "secret/metadata/gridops-public-site" {
+  capabilities = ["list", "read"]
+}
+EOT
+}
+
 # ==============================================================================
 # USERS (Identity)
 # ==============================================================================
 
 # Create the 'junior-dev' user automatically
-# This ensures we know exactly who exists in our system.
 resource "vault_generic_endpoint" "user_junior" {
   depends_on           = [vault_auth_backend.userpass]
   path                 = "auth/userpass/users/junior-dev"

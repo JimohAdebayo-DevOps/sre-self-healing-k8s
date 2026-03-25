@@ -22,8 +22,16 @@ Thumbs.db
 # ========================
 # TERRAFORM SECURITY
 # ========================
-.terraform/
 *.tfstate
 *.tfstate.*
-*.tfvars
 crash.log
+crash.*.log
+
+# Ignore local variable files that contain actual passwords
+*.tfvars
+*.tfvars.json
+secrets.auto.tfvars
+
+# Ignore the .terraform execution directory
+.terraform/
+.terraform.lock.hcl

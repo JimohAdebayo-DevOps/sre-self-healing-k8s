@@ -1,5 +1,5 @@
 resource "vault_mount" "kvv2" {
-  path        = "secret" 
+  path        = "secret"
   type        = "kv"
   description = "Main storage for GridOps Application Secrets"
 
