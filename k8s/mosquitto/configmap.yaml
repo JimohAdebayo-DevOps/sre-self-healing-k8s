@@ -1,0 +1,22 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mosquitto-config
+  namespace: gridops-edge
+data:
+  mosquitto.conf: |
+    # -----------------------------------------------------------------
+    # GridOps Edge Mosquitto Configuration (Proxmox)
+    # -----------------------------------------------------------------
+    listener 1883 0.0.0.0
+    allow_anonymous true
+    
+    # SRE Tuning: Disable persistence to minimize disk I/O bottlenecks
+    persistence false
+    
+    # SRE Tuning: Buffer expansion for high-frequency connection churn
+    max_inflight_messages 20000
+    max_queued_messages 20000
+    
+    # Strictly enforce QoS 1 (At Least Once) limits
+    max_qos 1
