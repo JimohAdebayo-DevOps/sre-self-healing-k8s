@@ -41,8 +41,19 @@ spec:
             path: /
           grafana.ini:
             server:
-              # Tells Grafana it is being served via HTTPS by Cloudflare
               root_url: https://grafana.sikiru.co.uk
+              
+        # ==============================================================
+        # INDUSTRY-STANDARD SRE FIX
+        # ==============================================================
+        prometheusOperator:
+          admissionWebhooks:
+            enabled: false
+          extraEnvs:
+            - name: KUBERNETES_SERVICE_HOST
+              value: "192.168.0.150"
+            - name: KUBERNETES_SERVICE_PORT
+              value: "6443"
   destination:
     server: 'https://kubernetes.default.svc'
     namespace: monitoring

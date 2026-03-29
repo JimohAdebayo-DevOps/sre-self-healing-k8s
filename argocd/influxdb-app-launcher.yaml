@@ -1,0 +1,21 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: gridops-influxdb
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: 'https://github.com/JimohAdebayo-DevOps/sre-self-healing-k8s.git'
+    path: k8s/influxdb
+    targetRevision: main
+  destination:
+    # Deploying this to the cloud, NOT the edge
+    name: 'gke_project-e29bb3f8-b6d8-434e-811_europe-north1-a_gridops-gke-cluster'
+    namespace: gridops-cloud
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
