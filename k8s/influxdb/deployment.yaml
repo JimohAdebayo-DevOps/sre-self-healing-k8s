@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: influxdb
-          image: influxdb:3.0-edge  # Utilizing the v3 IOx Engine
+          image: influxdb:edge  # Utilizing the v3 IOx Engine
           ports:
             - containerPort: 8086
           env:
