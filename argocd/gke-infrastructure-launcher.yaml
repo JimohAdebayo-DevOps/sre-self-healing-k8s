@@ -1,0 +1,26 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: gke-external-secrets
+  namespace: argocd
+spec:
+  project: default
+  source:
+    # Instead of a Git repo, ArgoCD can pull Helm charts directly
+    chart: external-secrets
+    repoURL: https://charts.external-secrets.io
+    targetRevision: 0.9.9
+    helm:
+      parameters:
+        - name: installCRDs
+          value: "true"
+  destination:
+    # Target the remote GKE cluster context alias
+    name: 'gke_project-e29bb3f8-b6d8-434e-811_europe-north1-a_gridops-gke-cluster'
+    namespace: external-secrets
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
