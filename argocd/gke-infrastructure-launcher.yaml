@@ -14,6 +14,8 @@ spec:
       parameters:
         - name: installCRDs
           value: "true"
+        - name: webhook.create
+          value: "false"
   destination:
     # Target the remote GKE cluster context alias
     name: 'gke_project-e29bb3f8-b6d8-434e-811_europe-north1-a_gridops-gke-cluster'
