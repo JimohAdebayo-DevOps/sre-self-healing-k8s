@@ -2,6 +2,10 @@ server:
   # 1. DISABLE DEV MODE
   dev:
     enabled: false
+  service:
+    annotations:
+      # THE SECURITY FIX: Mathematically registers Vault to the global eBPF mesh
+      io.cilium/global-service: "true"
   
   # 2. ENABLE PERSISTENCE (Write to disk)
   dataStorage:
