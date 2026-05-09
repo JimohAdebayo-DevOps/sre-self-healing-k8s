@@ -1,6 +1,6 @@
 controller:
   image:
-    tag: "2.492.1-lts-jdk21"
+    tag: "2.492.3-lts-jdk21"
 
   # The Absolute Identity Lock
   jenkinsUrl: "https://jenkins.sikiru.co.uk/"
