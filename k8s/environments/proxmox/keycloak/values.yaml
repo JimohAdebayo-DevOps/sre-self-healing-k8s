@@ -1,0 +1,59 @@
+auth:
+  adminUser: admin
+  existingSecret: keycloak-admin-secret
+  passwordKey: admin-password
+
+# Fixed for Bitnami image deprecation
+image:
+  registry: docker.io
+  repository: bitnamilegacy/keycloak
+  tag: 26.3.3-debian-12-r0
+
+# Disabled internal DB and point to n8n Postgres
+postgresql:
+  enabled: false
+
+externalDatabase:
+  host: postgresql-db.n8n.svc.cluster.local
+  port: 5432
+  user: keycloak
+  database: keycloak
+  existingSecret: keycloak-db-secret
+  existingSecretPasswordKey: password
+
+# Keycloak 26 Proxy & Hostname Configuration
+proxy: edge
+extraEnvVars:
+  - name: KC_PROXY
+    value: "edge" 
+  - name: KC_PROXY_HEADERS
+    value: "xforwarded"
+  - name: KC_HOSTNAME_URL
+    value: "https://sso.sikiru.co.uk" 
+  - name: KC_HTTP_RELATIVE_PATH
+    value: "/"
+
+# Optimized resources
+resources:
+  limits:
+    memory: 2Gi
+    cpu: 1000m
+  requests:
+    memory: 1Gi
+    cpu: 500m
+
+# Corrected Ingress Section
+ingress:
+  enabled: true
+  ingressClassName: nginx
+  hostname: sso.sikiru.co.uk
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-cloudflare
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "false"
+    nginx.ingress.kubernetes.io/backend-protocol: "HTTP"
+    nginx.ingress.kubernetes.io/proxy-buffer-size: "128k"
+    nginx.ingress.kubernetes.io/proxy-buffers-number: "4"
+    nginx.ingress.kubernetes.io/proxy-busy-buffers-size: "256k"
+  # FIXED: Bitnami expects a boolean 'true' here, not a list
+  tls: true

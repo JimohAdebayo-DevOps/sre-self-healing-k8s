@@ -1,0 +1,12 @@
+import "tfplan/v2" as tfplan
+
+aks_clusters = filter tfplan.resource_changes as address, rc {
+    rc.type is "azurerm_kubernetes_cluster" and
+    (rc.actions contains "create" or rc.actions contains "update")
+}
+
+main = rule {
+    all aks_clusters as _, cluster {
+        cluster.change.after.local_account_disabled is true
+    }
+}

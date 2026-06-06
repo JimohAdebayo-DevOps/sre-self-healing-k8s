@@ -1,0 +1,40 @@
+server:
+  # 1. DISABLE DEV MODE
+  dev:
+    enabled: false
+  service:
+    annotations:
+      # THE SECURITY FIX: Mathematically registers Vault to the global eBPF mesh
+      io.cilium/global-service: "true"
+  
+  # 2. ENABLE PERSISTENCE (Write to disk)
+  dataStorage:
+    enabled: true
+    size: 10Gi
+    storageClass: "longhorn"
+    accessMode: ReadWriteOnce
+
+  # 3. RESOURCE LIMITS (Production Sizing)
+  resources:
+    requests:
+      memory: 512Mi
+      cpu: 250m
+    limits:
+      memory: 1Gi
+      cpu: 500m
+
+  # 4. STANDALONE MODE (Simpler than HA for a single-cluster IDP)
+  # To use a file backend which is robust enough for this scale
+  ha:
+    enabled: false
+
+# 5. UI Configuration
+ui:
+  enabled: true
+  serviceType: "ClusterIP"
+  serviceNodePort: null
+  externalPort: 8200
+
+  # To keep this disabled because of using 'manual-ingress.yaml'
+  ingress:
+    enabled: false

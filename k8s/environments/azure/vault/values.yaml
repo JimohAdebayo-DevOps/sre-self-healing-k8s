@@ -1,0 +1,40 @@
+server:
+  # 1. DISABLE DEV MODE
+  dev:
+    enabled: false
+  service:
+    annotations:
+      # THE SECURITY FIX: Mathematically registers Vault to the global eBPF mesh
+      io.cilium/global-service: "true"
+
+  # 2. ENABLE PERSISTENCE (Azure Managed Disks)
+  dataStorage:
+    enabled: true
+    size: 10Gi
+    # ARCHITECTURAL FIX: Cloud-native storage abstraction for AKS
+    storageClass: "default" 
+    accessMode: ReadWriteOnce
+
+  # 3. RESOURCE LIMITS (Production Sizing)
+  resources:
+    requests:
+      memory: 512Mi
+      cpu: 250m
+    limits:
+      memory: 1Gi
+      cpu: 500m
+
+  # 4. STANDALONE MODE (Simpler than HA for a single-cluster IDP)
+  ha:
+    enabled: false
+
+# 5. UI Configuration
+ui:
+  enabled: true
+  serviceType: "ClusterIP"
+  serviceNodePort: null
+  externalPort: 8200
+
+  # Kept disabled to rely on manual-ingress.yaml
+  ingress:
+    enabled: false
