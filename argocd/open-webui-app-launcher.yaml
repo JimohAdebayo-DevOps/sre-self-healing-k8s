@@ -1,0 +1,23 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: open-webui-app
+  namespace: argocd
+  annotations:
+    # Sync Wave 5: Ensure Core DNS, Longhorn (1), and Keycloak (4) are fully initialized first [22, 23]
+    argocd.argoproj.io/sync-wave: "5"
+spec:
+  project: default
+  source:
+    repoURL: "https://github.com/JimohAdebayo-DevOps/sre-self-healing-k8s.git"
+    targetRevision: HEAD
+    path: k8s/open-webui
+  destination:
+    server: "https://kubernetes.default.svc"
+    namespace: open-webui
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
