@@ -37,7 +37,7 @@ spec:
         # SRE Resource Capping: Leave 2 cores and plenty of memory for the host OS and Kubernetes [16]
         resources:
           requests:
-            cpu: "1000m"
+            cpu: "250m"
             memory: "4Gi"
           limits:
             cpu: "2000m"
