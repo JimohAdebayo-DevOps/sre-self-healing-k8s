@@ -32,6 +32,9 @@ spec:
         # Direct UI requests to internal Ollama service endpoint
         - name: OLLAMA_BASE_URL
           value: "http://ollama-service.open-webui.svc.cluster.local:11434"
+        # --- SRE TRUST PROTOCOL FIX ---
+        - name: FORWARDED_ALLOW_IPS
+          value: "*" # Tells Uvicorn to trust proxy headers from NGINX
         
         # OIDC Configurations (Keycloak Handshake) [17]
         - name: ENABLE_OAUTH_SIGNUP
