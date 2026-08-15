@@ -13,35 +13,22 @@ spec:
       labels:
         app: ollama
     spec:
-      securityContext:
-        fsGroup: 1000
-      initContainers:
-        # Resolves any root-owned Longhorn directory locks [14, 15]
-        - name: volume-permissions
-          image: busybox:latest
-          command: ["sh", "-c", "chown -R 1000:1000 /home/ollama/.ollama"]
-          volumeMounts:
-            - name: model-storage
-              mountPath: /home/ollama/.ollama
       containers:
       - name: ollama
         image: ollama/ollama:latest
         ports:
         - containerPort: 11434
-          name: api
-        securityContext:
-          allowPrivilegeEscalation: false
-          runAsNonRoot: true
-          runAsUser: 1000
-          runAsGroup: 1000
-        # SRE Resource Capping: Leave 2 cores and plenty of memory for the host OS and Kubernetes [16]
+        env:
+        # SRE FIX: Explicitly direct Ollama to store models on the mounted PVC path
+        - name: OLLAMA_MODELS
+          value: "/home/ollama/.ollama/models"
         resources:
           requests:
             cpu: "250m"
             memory: "4Gi"
           limits:
             cpu: "2000m"
-            memory: "6Gi"
+            memory: "12Gi"
         volumeMounts:
         - name: model-storage
           mountPath: /home/ollama/.ollama
